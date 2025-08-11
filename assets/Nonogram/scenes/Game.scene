@@ -343,7 +343,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "05126226-e4ef-48aa-b504-46771853e514@f9941",
+      "__uuid__": "a3359137-ecf9-49ac-9ff9-d10582b2c8f6@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 1,
@@ -1442,7 +1442,7 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "_alignFlags": 21,
+    "_alignFlags": 45,
     "_target": null,
     "_left": 0,
     "_right": 0,
@@ -1456,7 +1456,7 @@
     "_isAbsBottom": true,
     "_isAbsHorizontalCenter": true,
     "_isAbsVerticalCenter": true,
-    "_originalWidth": 100,
+    "_originalWidth": 750,
     "_originalHeight": 100,
     "_alignMode": 2,
     "_lockFlags": 61,
@@ -1494,7 +1494,7 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "_alignFlags": 45,
+    "_alignFlags": 21,
     "_target": null,
     "_left": 0,
     "_right": 0,
