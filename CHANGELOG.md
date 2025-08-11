@@ -2,6 +2,13 @@
 
 # Changelog
 
+## [1.0.1](https://github.com/anguer/onet/compare/v1.0.0...v1.0.1) (2025-08-11)
+
+
+### Bug Fixes
+
+* small fix ([3262715](https://github.com/anguer/onet/commit/3262715a85116b4d124e0fab924dc995be60e7ae))
+
 # 1.0.0 (2025-08-11)
 
 
