@@ -1,0 +1,45 @@
+{
+  "description": "Nonogram",
+  "miniprogramRoot": "./",
+  "cloudfunctionRoot": "cloudfunctions/",
+  "packOptions": {
+    "ignore": [
+      {
+        "value": "cloudfunctions",
+        "type": "folder"
+      }
+    ],
+    "include": []
+  },
+  "setting": {
+    "urlCheck": false,
+    "postcss": true,
+    "minified": true,
+    "newFeature": false,
+    "enhance": true,
+    "useIsolateContext": true
+  },
+  "compileType": "game",
+  "libVersion": "latest",
+  "appid": "wx1772f56f0c14c23e",
+  "projectname": "",
+  "condition": {
+    "search": {
+      "current": -1,
+      "list": []
+    },
+    "conversation": {
+      "current": -1,
+      "list": []
+    },
+    "game": {
+      "currentL": -1,
+      "list": [],
+      "current": -1
+    },
+    "miniprogram": {
+      "current": -1,
+      "list": []
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "deviceOrientation": "portrait",
+  "iOSHighPerformance": true,
+  "iOSHighPerformance+": true,
+  "openDataContext": "",
+  "showStatusBar": true,
+  "resizable": false,
+  "displayMode": "mobile",
+  "networkTimeout": {
+    "request": 5000,
+    "connectSocket": 5000,
+    "uploadFile": 5000,
+    "downloadFile": 500000
+  }
+}

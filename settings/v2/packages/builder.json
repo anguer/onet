@@ -1,0 +1,128 @@
+{
+  "__version__": "1.3.9",
+  "splash-setting": {
+    "background": {
+      "type": "custom",
+      "color": {
+        "x": 1,
+        "y": 1,
+        "z": 1,
+        "w": 1
+      },
+      "image": "project://settings/bg.jpg"
+    },
+    "logo": {
+      "type": "none",
+      "image": "project://settings/Icon & Logo.png"
+    },
+    "totalTime": 500,
+    "displayRatio": 1
+  },
+  "bundleConfig": {
+    "custom": {
+      "default": {
+        "displayName": "i18n:builder.asset_bundle.defaultConfig",
+        "configs": {
+          "native": {
+            "preferredOptions": {
+              "isRemote": false,
+              "compressionType": "merge_dep"
+            }
+          },
+          "web": {
+            "preferredOptions": {
+              "isRemote": false,
+              "compressionType": "merge_dep"
+            },
+            "fallbackOptions": {
+              "compressionType": "merge_dep"
+            }
+          },
+          "miniGame": {
+            "fallbackOptions": {
+              "isRemote": false,
+              "compressionType": "merge_dep"
+            },
+            "configMode": "fallback",
+            "overwriteSettings": {
+              "wechatgame": {
+                "compressionType": "merge_dep",
+                "isRemote": true
+              },
+              "bytedance-mini-game": {
+                "compressionType": "merge_dep"
+              }
+            }
+          }
+        }
+      },
+      "52MNLwXcpF76J7a1MBMYo9": {
+        "displayName": "微信小游戏远程包",
+        "configs": {
+          "native": {
+            "preferredOptions": {
+              "isRemote": false,
+              "compressionType": "merge_dep"
+            }
+          },
+          "web": {
+            "preferredOptions": {
+              "isRemote": false,
+              "compressionType": "merge_dep"
+            },
+            "fallbackOptions": {
+              "compressionType": "merge_dep"
+            }
+          },
+          "miniGame": {
+            "fallbackOptions": {
+              "isRemote": false,
+              "compressionType": "merge_dep"
+            },
+            "configMode": "overwrite",
+            "overwriteSettings": {
+              "wechatgame": {
+                "isRemote": true
+              }
+            }
+          }
+        }
+      },
+      "b1jr3bMRNED6E59wR1K4mB": {
+        "displayName": "小游戏分包",
+        "configs": {
+          "native": {
+            "preferredOptions": {
+              "isRemote": false,
+              "compressionType": "merge_dep"
+            }
+          },
+          "web": {
+            "preferredOptions": {
+              "isRemote": false,
+              "compressionType": "merge_dep"
+            },
+            "fallbackOptions": {
+              "compressionType": "merge_dep"
+            }
+          },
+          "miniGame": {
+            "fallbackOptions": {
+              "isRemote": false,
+              "compressionType": "merge_dep"
+            },
+            "configMode": "overwrite",
+            "overwriteSettings": {
+              "wechatgame": {
+                "compressionType": "subpackage"
+              },
+              "bytedance-mini-game": {
+                "compressionType": "subpackage"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+
+#///////////////////////////
+# Cocos Creator 3D Project
+#///////////////////////////
+library/
+temp/
+local/
+build/
+profiles/
+#//////////////////////////
+# NPM
+#//////////////////////////
+node_modules/
+
+#//////////////////////////
+# VSCode
+#//////////////////////////
+.vscode/
+
+#//////////////////////////
+# WebStorm
+#//////////////////////////
+.idea/
+
+# temps
+scripts/midi
+scripts/midi-outputs
+scripts/pixel
+scripts/pixel-outputs
+scripts/screenshots
+scripts/screenshots-outputs
+scripts/svgs
+
+chi_sim.*

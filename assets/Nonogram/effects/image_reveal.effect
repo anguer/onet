@@ -1,0 +1,120 @@
+// Effect Syntax Guide: https://docs.cocos.com/creator/manual/zh/shader/index.html
+
+CCEffect %{
+  techniques:
+  - name: sprite-reveal
+    passes:
+    - vert: sprite-vs:vert
+      frag: reveal-fs:frag
+      depthStencilState:
+        depthTest: false
+        depthWrite: false
+      blendState:
+        targets:
+        - blend: true
+          blendSrc: src_alpha
+          blendDst: one_minus_src_alpha
+          blendDstAlpha: one_minus_src_alpha
+      rasterizerState:
+        cullMode: none
+      properties:
+        alphaThreshold: { value: 0.5 }
+        u_progress: { value: 0.0, editor: { displayName: Progress, slide: true, range: [0, 500], step: 1 } }
+        u_gridSize: { value: 10.0, editor: { displayName: Grid Size, slide: true, range: [1, 50], step: 1 } }
+        u_fadeRange: { value: 5.0, editor: { displayName: Fade Range, slide: true, range: [0, 10], step: 0.1 } }
+        u_origin: { value: [0, 0], editor: { displayName: Origin } }
+}%
+
+CCProgram sprite-vs %{
+  precision highp float;
+  #include <builtin/uniforms/cc-global>
+  #if USE_LOCAL
+    #include <builtin/uniforms/cc-local>
+  #endif
+  #if SAMPLE_FROM_RT
+    #include <common/common-define>
+  #endif
+  in vec3 a_position;
+  in vec2 a_texCoord;
+  in vec4 a_color;
+
+  out vec4 color;
+  out vec2 uv0;
+
+  vec4 vert () {
+    vec4 pos = vec4(a_position, 1);
+
+    #if USE_LOCAL
+      pos = cc_matWorld * pos;
+    #endif
+
+    #if USE_PIXEL_ALIGNMENT
+      pos = cc_matView * pos;
+      pos.xyz = floor(pos.xyz);
+      pos = cc_matProj * pos;
+    #else
+      pos = cc_matViewProj * pos;
+    #endif
+
+    uv0 = a_texCoord;
+    #if SAMPLE_FROM_RT
+      CC_HANDLE_RT_SAMPLE_FLIP(uv0);
+    #endif
+    color = a_color;
+
+    return pos;
+  }
+}%
+
+CCProgram reveal-fs %{
+  precision highp float;
+  #include <builtin/internal/embedded-alpha>
+  #include <builtin/internal/alpha-test>
+
+  uniform Constant {
+    vec2  u_origin;
+    float u_progress;
+    float u_gridSize;
+    float u_fadeRange;
+  };
+
+  #if USE_TEXTURE
+    in vec2 uv0;
+    #pragma builtin(local)
+    layout(set = 2, binding = 12) uniform sampler2D cc_spriteTexture;
+  #endif
+
+  vec4 frag() {
+    ivec2 cell = ivec2(floor(uv0 * u_gridSize));
+    int y = cell.y;
+    int x = cell.x;
+
+    // 计算曼哈顿距离层级
+    float dx = abs(float(x) - u_origin.x);
+    float dy = abs(float(y) - u_origin.y);
+    float layer = dx + dy;
+
+    // 计算本层级的 start/end
+    float start = layer;
+    float end   = start + u_fadeRange;
+    if (u_progress < start) discard;
+    float localP = clamp((u_progress - start) / u_fadeRange, 0.0, 1.0);
+
+    // 下面保持不变
+    vec4 o = vec4(1, 1, 1, 1);
+
+    #if USE_TEXTURE
+      o *= CCSampleWithAlphaSeparated(cc_spriteTexture, uv0);
+      #if IS_GRAY
+        float gray  = 0.2126 * o.r + 0.7152 * o.g + 0.0722 * o.b;
+        o.r = o.g = o.b = gray;
+      #endif
+    #endif
+
+    o.a *= localP;
+    if (o.a <= 0.0) {
+      discard;
+    }
+    return o;
+  }
+}%

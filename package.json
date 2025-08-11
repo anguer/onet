@@ -1,0 +1,56 @@
+{
+  "name": "onet",
+  "uuid": "927874dc-2623-458f-9b0f-9ddc0689b233",
+  "creator": {
+    "version": "3.8.6"
+  },
+  "version": "0.0.0",
+  "description": "",
+  "private": true,
+  "author": "",
+  "license": "UNLICENSED",
+  "scripts": {
+    "lint": "eslint \"{assets,tests}/**/*.{js,jsx,ts,tsx}\" --fix",
+    "prepare": "husky || true",
+    "release": "semantic-release",
+    "manifest": "tsx scripts/manifest-generator"
+  },
+  "engines": {
+    "node": ">= 20"
+  },
+  "packageManager": "pnpm@9.4.0",
+  "devDependencies": {
+    "@cloudbase/wx-cloud-client-sdk": "^1.3.1",
+    "@crazejs/lint": "^0.0.8",
+    "@douyin-microapp/typings": "^1.3.1",
+    "@tonejs/midi": "^2.0.28",
+    "@types/fs-extra": "^11.0.4",
+    "@types/lodash.debounce": "^4.0.9",
+    "@types/lodash.throttle": "^4.1.9",
+    "@types/prompts": "^2.4.9",
+    "canvas": "^3.1.2",
+    "commitlint": "^19",
+    "eslint": "^8",
+    "fs-extra": "^11.2.0",
+    "husky": "^9",
+    "lint-staged": "^15",
+    "minigame-api-typings": "^3.8.11",
+    "prettier": "^3",
+    "prompts": "^2.4.2",
+    "semantic-release": "^21",
+    "sharp": "0.32.6",
+    "svg-path-properties": "^1.3.0",
+    "svgson": "^5.3.1",
+    "tesseract.js": "^6.0.1",
+    "tsx": "^4.19.0",
+    "wx-server-sdk": "^3.0.1"
+  },
+  "dependencies": {
+    "@colyseus/msgpackr": "^1.11.2",
+    "@colyseus/schema": "^3.0.42",
+    "@dn-sdk/minigame": "^1.5.5",
+    "dayjs": "^1.11.13",
+    "lodash.debounce": "^4.0.8",
+    "lodash.throttle": "^4.1.1"
+  }
+}

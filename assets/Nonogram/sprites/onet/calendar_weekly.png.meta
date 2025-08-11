@@ -1,0 +1,134 @@
+{
+  "ver": "1.0.27",
+  "importer": "image",
+  "imported": true,
+  "uuid": "ab3af3c9-110f-4f09-93db-dd1441aadb7d",
+  "files": [
+    ".json",
+    ".png"
+  ],
+  "subMetas": {
+    "6c48a": {
+      "importer": "texture",
+      "uuid": "ab3af3c9-110f-4f09-93db-dd1441aadb7d@6c48a",
+      "displayName": "calendar_weekly",
+      "id": "6c48a",
+      "name": "texture",
+      "userData": {
+        "wrapModeS": "clamp-to-edge",
+        "wrapModeT": "clamp-to-edge",
+        "imageUuidOrDatabaseUri": "ab3af3c9-110f-4f09-93db-dd1441aadb7d",
+        "isUuid": true,
+        "visible": false,
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f9941": {
+      "importer": "sprite-frame",
+      "uuid": "ab3af3c9-110f-4f09-93db-dd1441aadb7d@f9941",
+      "displayName": "calendar_weekly",
+      "id": "f9941",
+      "name": "spriteFrame",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 1.5,
+        "offsetY": -1.5,
+        "trimX": 26,
+        "trimY": 28,
+        "width": 551,
+        "height": 27,
+        "rawWidth": 600,
+        "rawHeight": 80,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [
+            -275.5,
+            -13.5,
+            0,
+            275.5,
+            -13.5,
+            0,
+            -275.5,
+            13.5,
+            0,
+            275.5,
+            13.5,
+            0
+          ],
+          "indexes": [
+            0,
+            1,
+            2,
+            2,
+            1,
+            3
+          ],
+          "uv": [
+            26,
+            52,
+            577,
+            52,
+            26,
+            25,
+            577,
+            25
+          ],
+          "nuv": [
+            0.043333333333333335,
+            0.3125,
+            0.9616666666666667,
+            0.3125,
+            0.043333333333333335,
+            0.65,
+            0.9616666666666667,
+            0.65
+          ],
+          "minPos": [
+            -275.5,
+            -13.5,
+            0
+          ],
+          "maxPos": [
+            275.5,
+            13.5,
+            0
+          ]
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "ab3af3c9-110f-4f09-93db-dd1441aadb7d@6c48a",
+        "atlasUuid": "",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "type": "sprite-frame",
+    "hasAlpha": true,
+    "fixAlphaTransparencyArtifacts": false,
+    "redirect": "ab3af3c9-110f-4f09-93db-dd1441aadb7d@6c48a"
+  }
+}
