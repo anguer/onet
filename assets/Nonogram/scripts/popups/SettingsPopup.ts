@@ -69,45 +69,45 @@ export class SettingsPopup extends BasePopup<SettingsOptions, SettingsResult> {
 
   @Throttle()
   private async _onOpenRating() {
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
     await SocialManager.instance.showRecommend();
   }
 
   @Throttle()
   private async _onOpenCustomerService() {
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
     await SocialManager.instance.openCustomerServiceConversation();
   }
 
   @Throttle()
   private async _onOpenPrivacyContract() {
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
     await SocialManager.instance.openPrivacyContract();
   }
 
   @Throttle()
   private async _onOpenAboutUs() {
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
   }
 
   @Throttle()
   private async _onClose() {
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
     await this.success(SettingsResult.Close);
   }
 
   private async _onMusicToggle(toggle: Switcher) {
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
     AudioManager.instance.toggleBgm(toggle.isChecked);
   }
 
   private async _onSoundEffectToggle(toggle: Switcher) {
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
     AudioManager.instance.toggleEffect(toggle.isChecked);
   }
 
   private async _onVibrationToggle(toggle: Switcher) {
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
     SocialManager.instance.vibrateOn = toggle.isChecked;
   }
 }

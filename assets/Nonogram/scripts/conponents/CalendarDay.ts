@@ -117,7 +117,7 @@ export class CalendarDay extends Component {
 
     if (!this._current || this._current.status !== LevelStatus.Uncompleted) return;
 
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
     this.node.dispatchEvent(new CommonEvent(CalendarDay.EventType.TOUCH_END, true, this._current));
   }
 

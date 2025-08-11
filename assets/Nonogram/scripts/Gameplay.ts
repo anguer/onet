@@ -1,4 +1,4 @@
-import { _decorator, Asset, Component, instantiate, Node, Prefab, game, Game, SpriteFrame } from 'cc';
+import { _decorator, Component, instantiate, Node, Prefab, game, Game, SpriteFrame } from 'cc';
 import { LogManager } from 'db://assets/Framework/managers/LogManager';
 import { PopupManager } from 'db://assets/Framework/managers/PopupManager';
 import { EventManager } from 'db://assets/Nonogram/scripts/managers/EventManager';
@@ -14,7 +14,7 @@ import { RewardPopup } from 'db://assets/Nonogram/scripts/popups/RewardPopup';
 import { ObjectPoolManager } from 'db://assets/Framework/managers/ObjectPoolManager';
 import { GameResult, GameScreen } from 'db://assets/Nonogram/scripts/screens/GameScreen';
 import { SocialManager } from 'db://assets/Framework/factories/social/SocialManager';
-import { AnalysisManager } from 'db://assets/Nonogram/scripts/managers/AnalysisManager';
+import { ThemeManager } from 'db://assets/Nonogram/scripts/managers/ThemeManager';
 
 const { ccclass, property } = _decorator;
 
@@ -37,10 +37,6 @@ const popups = [
   { popupClass: GameScreen, path: 'prefabs/popups/GameScreen', modal: false, priority: 900 },
 ];
 
-const OTHER_COUNT = 2;
-const POOL_COUNT = 2;
-const RESOURCE_COUNT = OTHER_COUNT + POOL_COUNT + popups.length;
-
 @ccclass('Gameplay')
 export class Gameplay extends Component {
   @property(SplashScreen) private splashScreen: SplashScreen;
@@ -60,10 +56,7 @@ export class Gameplay extends Component {
 
     try {
       // 初始化网络和登录态
-      const authData = await NetManager.instance.init();
-
-      // 初始化广告分析
-      AnalysisManager.instance.init(authData.playerId || '', authData.providerAccountId || '', authData.isNew || false);
+      await NetManager.instance.init();
 
       // 加载数据
       await Promise.all([this._requestAll(), this._loadAll(this._onProgress.bind(this))]);
@@ -125,6 +118,27 @@ export class Gameplay extends Component {
     this.splashScreen.hide();
   }
 
+  private async _loadPopups() {
+    for (const popup of popups) {
+      const prefab = await ResourceManager.instance.load(popup.path, Prefab);
+      PopupManager.instance.registerPopup(prefab.name, prefab, popup.popupClass, popup.priority, popup.modal);
+      // ResourceManager.instance.release(popup.path);
+    }
+  }
+
+  private async _loadAssets() {
+    const spinner = await ResourceManager.instance.load(SPINNER_ASSET, SpriteFrame);
+    await ToastManager.instance.config({ spinner });
+  }
+
+  private async _loadPools() {
+    ObjectPoolManager.instance.createPool(this.calendarDayPrefab, {
+      name: this.calendarDayPrefab.name,
+      // 连续三个月不会超过100天
+      initialSize: 100,
+    });
+  }
+
   /**
    * 请求网络资源
    * @private
@@ -141,65 +155,20 @@ export class Gameplay extends Component {
    * @private
    */
   private async _loadAll(onProgress: (progress: number) => Promise<void>) {
-    return new Promise<void>(async (resolve, reject) => {
-      try {
-        let finished = 0;
+    // 加载主题
+    await Promise.all([ThemeManager.instance.init(), onProgress(30)]);
 
-        {
-          // 加载弹窗
-          for (const popup of popups) {
-            const prefab = await this._loadAsset(popup.path, Prefab, finished, RESOURCE_COUNT, onProgress);
-            PopupManager.instance.registerPopup(prefab.name, prefab, popup.popupClass, popup.priority, popup.modal);
-            finished++;
-            // ResourceManager.instance.release(popup.path);
-          }
-          LogManager.info(`[Gameplay#_loadAll]`, `成功加载${popups.length}个弹窗`);
-        }
+    // 加载弹窗
+    await Promise.all([this._loadPopups(), onProgress(60)]);
 
-        {
-          const spinner = await this._loadAsset(SPINNER_ASSET, SpriteFrame, finished, RESOURCE_COUNT, onProgress);
-          finished++;
-          await ToastManager.instance.config({ spinner });
-        }
+    // 加载其他资源
+    await Promise.all([this._loadAssets(), onProgress(70)]);
 
-        {
-          // 初始化对象池
-          finished += POOL_COUNT;
-          await Promise.all([
-            // ObjectPoolManager.instance.createPool(this.chapterLevelPrefab, {
-            //   name: this.chapterLevelPrefab.name,
-            //   // 特别篇章最多144关卡
-            //   initialSize: 144,
-            // }),
-            ObjectPoolManager.instance.createPool(this.calendarDayPrefab, {
-              name: this.calendarDayPrefab.name,
-              // 连续三个月不会超过100天
-              initialSize: 100,
-            }),
-            onProgress(Math.min(Math.max((finished / RESOURCE_COUNT) * 100, 0), 100)),
-          ]);
-        }
+    // 初始化对象池
+    await Promise.all([this._loadPools(), onProgress(90)]);
 
-        // 释放内存
-        SocialManager.instance.triggerGC();
-
-        resolve();
-      } catch (e) {
-        reject(e);
-      }
-    });
-  }
-
-  private async _loadAsset<T extends Asset>(
-    path: string,
-    type: new (...args: never[]) => T,
-    finished: number,
-    total: number,
-    onProgress: (progress: number) => Promise<void>,
-  ): Promise<T> {
-    const asset = await ResourceManager.instance.load(path, type);
-    onProgress(Math.min(Math.max(((finished + 1) / total) * 100, 0), 100)).then();
-    return asset;
+    // 释放内存
+    SocialManager.instance.triggerGC();
   }
 
   /**

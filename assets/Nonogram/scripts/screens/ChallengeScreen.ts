@@ -73,14 +73,14 @@ export class ChallengeScreen extends BaseScreen {
 
   @Throttle()
   private _onPrevPage() {
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
     const index = Math.max(0, this._challengePageIndex - 1);
     this.pageView.scrollToPage(index);
   }
 
   @Throttle()
   private _onNextPage() {
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
     const index = Math.min(this._challengeTotalPage, this._challengePageIndex + 1);
     this.pageView.scrollToPage(index);
   }
@@ -101,7 +101,7 @@ export class ChallengeScreen extends BaseScreen {
       return;
     }
 
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
     EventManager.emit(EventManager.EventType.START_GAME, page.selectedLevel);
   }
 

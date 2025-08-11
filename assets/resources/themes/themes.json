@@ -1,0 +1,32 @@
+[
+  {
+    "id": "chinese_cuisine",
+    "name": "中华美食",
+    "banner": "themes/1_chinese_cuisine/banner/spriteFrame",
+    "bricks": "themes/1_chinese_cuisine/bricks"
+  },
+  {
+    "id": "undersea_world",
+    "name": "海底世界",
+    "banner": "themes/2_undersea_world/banner/spriteFrame",
+    "bricks": "themes/2_undersea_world/bricks"
+  },
+  {
+    "id": "frozen_kingdom",
+    "name": "冰雪王国",
+    "banner": "themes/3_frozen_kingdom/banner/spriteFrame",
+    "bricks": "themes/3_frozen_kingdom/bricks"
+  },
+  {
+    "id": "summer_beach",
+    "name": "夏日海滩",
+    "banner": "themes/4_summer_beach/banner/spriteFrame",
+    "bricks": "themes/4_summer_beach/bricks"
+  },
+  {
+    "id": "candy_workshop",
+    "name": "糖果工坊",
+    "banner": "themes/5_candy_workshop/banner/spriteFrame",
+    "bricks": "themes/5_candy_workshop/bricks"
+  }
+]

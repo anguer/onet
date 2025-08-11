@@ -54,7 +54,7 @@ export class TabbarItem extends Component {
   private _onTouchEnd(event: EventTouch) {
     event.propagationStopped = true;
     if (this.active) return;
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
     this.node.dispatchEvent(new CommonEvent(TabbarItem.EventType.SELECT, true, this));
   }
 

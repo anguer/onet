@@ -46,7 +46,7 @@ export class MainScreen extends BaseScreen {
    */
   @Throttle()
   private _onStart() {
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
     if (!GameManager.instance.standard) {
       ToastManager.instance.show('你已完成所有关卡');
       return;

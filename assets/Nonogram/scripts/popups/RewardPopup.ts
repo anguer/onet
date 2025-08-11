@@ -43,14 +43,14 @@ export class RewardPopup extends BasePopup<RewardOptions, RewardResult> {
 
   @Throttle()
   private async _onClose() {
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
 
     await this.success(RewardResult.Close);
   }
 
   @Throttle()
   private async _onOk() {
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
 
     await this.success(RewardResult.Ok);
   }

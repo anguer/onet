@@ -40,7 +40,7 @@ export class Tabs extends Component {
   @Throttle()
   private _onTriggerTouch(event: CommonEvent<TabsTrigger>) {
     event.propagationStopped = true;
-    AudioManager.instance.playEffect('nonogram/audio/click1');
+    AudioManager.instance.playEffect('common/audio/click1');
     this._toggle(event.detail);
   }
 
