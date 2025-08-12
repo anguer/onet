@@ -52,8 +52,6 @@ export class Gameplay extends Component {
   protected onLoad() {
     game.on(Game.EVENT_HIDE, () => console.log('游戏进入后台'), this);
     game.on(Game.EVENT_SHOW, () => console.log('游戏进入前台'), this);
-    // 设置状态栏颜色
-    SocialManager.instance.setStatusBarStyle('white');
     SocialManager.instance.onMemoryWarning(this._onMemoryWarning.bind(this));
   }
 

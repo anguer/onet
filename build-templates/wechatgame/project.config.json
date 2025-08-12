@@ -1,16 +1,6 @@
 {
   "description": "",
   "miniprogramRoot": "./",
-  "cloudfunctionRoot": "cloudfunctions/",
-  "packOptions": {
-    "ignore": [
-      {
-        "value": "cloudfunctions",
-        "type": "folder"
-      }
-    ],
-    "include": []
-  },
   "setting": {
     "urlCheck": false,
     "postcss": true,

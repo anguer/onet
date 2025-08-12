@@ -3,7 +3,7 @@
   "iOSHighPerformance": true,
   "iOSHighPerformance+": true,
   "openDataContext": "",
-  "showStatusBar": true,
+  "showStatusBar": false,
   "resizable": false,
   "displayMode": "mobile",
   "networkTimeout": {
