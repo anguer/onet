@@ -2,6 +2,13 @@
 
 # Changelog
 
+## [1.1.5](https://github.com/anguer/onet/compare/v1.1.4...v1.1.5) (2025-08-12)
+
+
+### Bug Fixes
+
+* 优化广告管理器 ([b472cc8](https://github.com/anguer/onet/commit/b472cc8b045f095a915fa34129430f04255b095c))
+
 ## [1.1.4](https://github.com/anguer/onet/compare/v1.1.3...v1.1.4) (2025-08-12)
 
 
