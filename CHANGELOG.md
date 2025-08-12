@@ -2,6 +2,13 @@
 
 # Changelog
 
+## [1.1.2](https://github.com/anguer/onet/compare/v1.1.1...v1.1.2) (2025-08-12)
+
+
+### Bug Fixes
+
+* 整理资源目录 ([45ffc68](https://github.com/anguer/onet/commit/45ffc68d179774d40cc23f22e1a7ce3f8789752d))
+
 ## [1.1.1](https://github.com/anguer/onet/compare/v1.1.0...v1.1.1) (2025-08-12)
 
 
