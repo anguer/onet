@@ -101,7 +101,7 @@ export class ThemeManager {
       this._themes.set(theme.id, { id: theme.id, name: theme.name, banner, bricks });
     }
 
-    LogManager.info('[ThemeManager#init]', '加载主题完成', this.themes);
+    LogManager.info('[ThemeManager#init]', '加载主题完成', this.themes.length);
   }
 
   public selectTheme(id: string) {

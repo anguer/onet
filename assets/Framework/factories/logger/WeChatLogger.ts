@@ -63,6 +63,7 @@ export class WeChatLogger extends Logger {
       level: 'debug',
       key: normalizeTag(module),
       value: data,
+      fail: () => console.warn(module, ...data),
     });
   }
 
@@ -90,6 +91,7 @@ export class WeChatLogger extends Logger {
         }
         return t;
       }),
+      fail: () => console.warn(module, ...data),
     });
   }
 
@@ -99,6 +101,7 @@ export class WeChatLogger extends Logger {
       level: 'info',
       key: normalizeTag(module),
       value: data,
+      fail: () => console.warn(module, ...data),
     });
   }
 
@@ -108,6 +111,7 @@ export class WeChatLogger extends Logger {
       level: 'info',
       key: normalizeTag(module),
       value: data,
+      fail: () => console.warn(module, ...data),
     });
   }
 
@@ -117,6 +121,7 @@ export class WeChatLogger extends Logger {
       level: 'warn',
       key: normalizeTag(module),
       value: data,
+      fail: () => console.warn(module, ...data),
     });
   }
 }
