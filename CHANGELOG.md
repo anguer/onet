@@ -2,6 +2,13 @@
 
 # Changelog
 
+## [1.1.1](https://github.com/anguer/onet/compare/v1.1.0...v1.1.1) (2025-08-12)
+
+
+### Bug Fixes
+
+* 删除废弃资源 ([9e24e4b](https://github.com/anguer/onet/commit/9e24e4bc14181300cb9792717ea7994ec5a0d180))
+
 # [1.1.0](https://github.com/anguer/onet/compare/v1.0.1...v1.1.0) (2025-08-12)
 
 
