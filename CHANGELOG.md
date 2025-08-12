@@ -2,6 +2,13 @@
 
 # Changelog
 
+# [1.1.0](https://github.com/anguer/onet/compare/v1.0.1...v1.1.0) (2025-08-12)
+
+
+### Features
+
+* 新增游戏相关界面和弹窗 ([93551d5](https://github.com/anguer/onet/commit/93551d561e9e30eb881c9b871aa315f72f3f2147))
+
 ## [1.0.1](https://github.com/anguer/onet/compare/v1.0.0...v1.0.1) (2025-08-11)
 
 
