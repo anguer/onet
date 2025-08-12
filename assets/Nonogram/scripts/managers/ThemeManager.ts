@@ -17,6 +17,10 @@ export interface Theme {
 }
 
 export class ThemeManager {
+  public static readonly EventType = {
+    SELECT_CHANGE: '__ThemeManager_SELECT_CHANGE__',
+  };
+
   private static _instance: ThemeManager;
 
   public static get instance(): ThemeManager {
@@ -40,6 +44,16 @@ export class ThemeManager {
     return values;
   }
 
+  private readonly _current: Map<'current', string> = new Map();
+  public get selectedTheme(): Theme {
+    const selectedId = this._current.get('current');
+    if (!selectedId) {
+      return this.themes[0];
+    }
+
+    return this._themes.get(selectedId) || this.themes[0];
+  }
+
   constructor() {
     this._manager = new Node(`__${this.constructor.name}__`);
 
@@ -50,26 +64,49 @@ export class ThemeManager {
     director.addPersistRootNode(this._manager);
   }
 
+  public on(...options: Parameters<typeof this._manager.on>) {
+    this._manager.on(...options);
+  }
+
+  public off(...options: Parameters<typeof this._manager.off>) {
+    this._manager.off(...options);
+  }
+
+  public emit(...options: Parameters<typeof this._manager.emit>) {
+    this._manager.emit(...options);
+  }
+
   public async init() {
-    try {
-      const configs = await ResourceManager.instance.load('themes/themes', JsonAsset);
-      if (!configs.json) {
-        LogManager.error('[ThemeManager#init]', '加载主题配置文件失败');
-        return;
-      }
-
-      const themes = configs.json as Array<ThemeData>;
-      for (const theme of themes) {
-        const banner = await ResourceManager.instance.load(theme.banner, SpriteFrame);
-        const atlas = await ResourceManager.instance.load(theme.bricks, SpriteAtlas);
-        const bricks = this._loadSpriteFramesWithAtlas(atlas);
-        this._themes.set(theme.id, { id: theme.id, name: theme.name, banner, bricks });
-      }
-
-      LogManager.info('[ThemeManager#init]', '加载主题完成', this.themes);
-    } catch (e) {
-      LogManager.error('[ThemeManager#init]', e);
+    const configs = await ResourceManager.instance.load('themes/themes', JsonAsset);
+    if (!configs.json) {
+      throw new Error('加载主题配置文件失败');
     }
+
+    if (!Array.isArray(configs.json)) {
+      throw new Error('主题配置文件错误');
+    }
+
+    if (configs.json.length === 0) {
+      throw new Error('主题配置为空');
+    }
+
+    const themes = configs.json as Array<ThemeData>;
+    const defaultTheme = themes[0];
+    this._current.set('current', defaultTheme.id);
+
+    for (const theme of themes) {
+      const banner = await ResourceManager.instance.load(theme.banner, SpriteFrame);
+      const atlas = await ResourceManager.instance.load(theme.bricks, SpriteAtlas);
+      const bricks = this._loadSpriteFramesWithAtlas(atlas);
+      this._themes.set(theme.id, { id: theme.id, name: theme.name, banner, bricks });
+    }
+
+    LogManager.info('[ThemeManager#init]', '加载主题完成', this.themes);
+  }
+
+  public selectTheme(id: string) {
+    this._current.set('current', id);
+    this.emit(ThemeManager.EventType.SELECT_CHANGE, id);
   }
 
   private _loadSpriteFramesWithAtlas(atlas: SpriteAtlas): Array<SpriteFrame> {

@@ -63,7 +63,7 @@ export class PopupManager {
     const transform = mask.getComponent(UITransform) || mask.addComponent(UITransform);
     const graphics = mask.getComponent(Graphics) || mask.addComponent(Graphics);
     graphics.clear();
-    graphics.fillColor = new Color(0, 0, 0, 100);
+    graphics.fillColor = new Color(22, 8, 56, 200);
     graphics.fillRect(-transform.width / 2, -transform.height / 2, transform.width, transform.height);
     // 添加半透明背景
     const modalBgOpacity = mask.addComponent(UIOpacity);
@@ -174,6 +174,9 @@ export class PopupManager {
       // 添加节点至Canvas
       this._manager.addChild(popupNode);
 
+      // 更新弹窗层级
+      this.updatePopupZIndex();
+
       // 添加到活动弹窗列表
       this.activePopups.set(name, popupNode);
 
@@ -192,6 +195,22 @@ export class PopupManager {
       // 清理弹窗
       await this.cleanupPopup(name);
     }
+  }
+
+  private updatePopupZIndex() {
+    // 按优先级排序
+    const sortedPopups = Array.from(this.activePopups.entries())
+      .map(([key, node]) => ({
+        key,
+        node,
+        priority: this.popupConfigs.get(key)?.priority || 0,
+      }))
+      .sort((a, b) => b.priority - a.priority);
+
+    // 设置兄弟索引（层级）
+    sortedPopups.forEach((popup, index) => {
+      popup.node.setSiblingIndex(index);
+    });
   }
 
   private async cleanupPopup<K extends keyof PopupMap>(name: K) {

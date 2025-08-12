@@ -1,5 +1,4 @@
 import { Component, UIOpacity } from 'cc';
-import { TweenUtils } from 'db://assets/Framework/lib/TweenUtils';
 import { LogManager } from 'db://assets/Framework/managers/LogManager';
 
 /**
@@ -12,13 +11,18 @@ export abstract class BaseScreen extends Component {
   };
 
   private _visible = false;
+  protected defaultShow: boolean = false;
 
   protected async onLoad() {
     const uiOpacity = this.node.getComponent(UIOpacity) || this.node.addComponent(UIOpacity);
-    uiOpacity.opacity = 0;
-    this._visible = false;
+    uiOpacity.opacity = this.defaultShow ? 255 : 0;
+    this._visible = this.defaultShow;
 
     this.node.on(BaseScreen.EventType.VISIBLE, this.onVisible, this);
+  }
+
+  protected start() {
+    this.onInit();
   }
 
   protected onDestroy() {
@@ -75,13 +79,18 @@ export abstract class BaseScreen extends Component {
   }
 
   // ========== 抽象方法（子类必须实现） ==========
+  /**
+   * 初始化逻辑
+   */
+  protected abstract onInit(): void;
 
   /**
    * 播放显示动画
    * @returns Promise<void> 动画完成
    */
   protected async playShowAnimation(): Promise<void> {
-    return TweenUtils.fadeIn(this.node, 0);
+    const uiOpacity = this.node.getComponent(UIOpacity) || this.node.addComponent(UIOpacity);
+    uiOpacity.opacity = 255;
   }
 
   /**
@@ -89,7 +98,8 @@ export abstract class BaseScreen extends Component {
    * @returns Promise<void> 动画完成
    */
   protected async playHideAnimation(): Promise<void> {
-    return TweenUtils.fadeOut(this.node, 0, false);
+    const uiOpacity = this.node.getComponent(UIOpacity) || this.node.addComponent(UIOpacity);
+    uiOpacity.opacity = 0;
   }
 
   // ========== 可选钩子方法（子类可覆盖） ==========

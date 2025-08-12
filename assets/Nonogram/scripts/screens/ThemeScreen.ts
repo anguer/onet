@@ -12,7 +12,7 @@ export class ThemeScreen extends BaseScreen {
 
   private readonly _chapterItems: Map<string, ThemeItem> = new Map();
 
-  protected start() {
+  protected onInit() {
     this._initThemes();
   }
 

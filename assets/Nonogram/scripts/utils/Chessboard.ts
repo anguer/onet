@@ -1,5 +1,7 @@
-import { EventTouch, Graphics, Layout, Node, Rect, Size, UITransform, Vec2, Vec3 } from 'cc';
-import { Colors } from 'db://assets/Nonogram/scripts/utils/Constants';
+import { EventTouch, Layout, instantiate, Node, Prefab, Rect, Size, UITransform, Vec2, Vec3, math } from 'cc';
+import { GameBrick } from 'db://assets/Nonogram/scripts/conponents/GameBrick';
+import { sleep } from 'db://assets/Framework/lib/Share';
+import { ThemeManager } from 'db://assets/Nonogram/scripts/managers/ThemeManager';
 
 export interface Square {
   row: number;
@@ -7,46 +9,81 @@ export interface Square {
   boundingBox: Rect;
 }
 
+export enum CellType {
+  Empty = 0,
+  Brick = 1,
+  Ice = 2,
+}
+
+// 限制列数
+const CONSTRAINT_COLS = 8;
+
 export class Chessboard {
   private readonly _outUILocation: Vec2 = new Vec2();
   private readonly _outUIPosition: Vec3 = new Vec3();
   private readonly _outPosition: Vec3 = new Vec3();
 
-  private readonly graphics: Graphics;
-  private readonly uiTransform: UITransform;
+  private readonly board: UITransform;
   private readonly layout: Layout;
   private readonly squares: Array<Square> = [];
 
-  public readonly cellSize: Size;
+  public readonly brickSize: Size;
+  public readonly rows: number;
+  public readonly cols: number;
 
   constructor(
-    private readonly node: Node,
-    private readonly gridSize: number,
-    private readonly gutter: number = 2,
+    private readonly grid: Node,
+    private readonly cells: Array<Array<CellType>>,
+    private readonly itemPrefab: Prefab,
   ) {
-    this.graphics = this.node.getComponent(Graphics) || this.node.addComponent(Graphics);
-    this.uiTransform = this.node.getComponent(UITransform) || this.node.addComponent(UITransform);
-    this.layout = this.node.getComponent(Layout) || this.node.addComponent(Layout);
+    this.board = this.grid.getComponent(UITransform) || this.grid.addComponent(UITransform);
+    this.layout = this.grid.getComponent(Layout) || this.grid.addComponent(Layout);
 
-    // 计算格子大小（减去间隔）
-    const padding = (gridSize + 1) * gutter;
-    this.cellSize = new Size((this.uiTransform.width - padding) / gridSize, (this.uiTransform.height - padding) / gridSize);
+    this.rows = this.cells.length;
+    this.cols = this.cells[0].length || 0;
+
+    // 按棋盘宽度和固定列数计算砖块大小
+    const size = this.board.width / CONSTRAINT_COLS;
+    // 计算棋盘高度
+    const boardHeight = size * this.rows;
+    this.board.setContentSize(this.board.width, boardHeight);
+    this.brickSize = new Size(size, size);
 
     // 初始化棋盘
-    this._init(this.gridSize, this.gutter);
-    this._initLayout(this.gridSize, this.gutter);
-    this._initSquares(this.gridSize, this.gutter);
+    this._clear();
+    this._initLayout();
+    this._initCells();
   }
 
-  public clear() {
-    this.graphics.clear();
-    this.squares.length = 0;
+  public async initBricks() {
+    for (let i = 0; i < this.rows; i++) {
+      for (let j = 0; j < this.cols; j++) {
+        const cell = this.cells[i][j];
+        switch (cell) {
+          case CellType.Empty:
+            this._createEmpty();
+            break;
+          case CellType.Brick:
+            this._createBrick();
+            await sleep(0.05);
+            break;
+          case CellType.Ice:
+            this._createEmpty();
+            break;
+        }
+      }
+    }
+  }
+
+  public async reset() {
+    this._clear();
+    await this.initBricks();
   }
 
   public checkout(event: EventTouch): Square | null {
     const { x, y } = event.getUILocation(this._outUILocation);
     this._outUIPosition.set(x, y);
-    const localPos = this.uiTransform.convertToNodeSpaceAR(this._outUIPosition, this._outPosition).toVec2();
+    const localPos = this.board.convertToNodeSpaceAR(this._outUIPosition, this._outPosition).toVec2();
 
     const len = this.squares.length;
     for (let i = 0; i < len; i++) {
@@ -57,88 +94,68 @@ export class Chessboard {
     return null;
   }
 
-  /**
-   * 绘制棋盘
-   * @param gridSize - e.g. 10、15、20
-   * @param gutter - e.g. 2、4
-   * @private
-   */
-  private _init(gridSize: number, gutter: number): void {
-    // 设置原点为左上角
-    this.uiTransform.anchorX = 0;
-    this.uiTransform.anchorY = 1;
-
-    // 清理之前内容
-    this.clear();
-
-    // 粗线和细线宽度
-    const wideLine = 4;
-    // const thinLine = 2.8;
-
-    // 绘制背景（由于原点位于左上角，所以高度为负数）
-    // this.graphics.fillColor = Colors.white;
-    // this.graphics.roundRect(0, 0, this.uiTransform.width, -this.uiTransform.height, 8);
-    // this.graphics.fill();
-
-    // 绘制网格线（由于原点位于左上角，所以Y轴坐标始终为负数）
-    this.graphics.strokeColor = Colors.GUIDELINE;
-    for (let i = 1; i < gridSize; i++) {
-      let offset: number;
-      if (i % 5 === 0) {
-        this.graphics.lineWidth = wideLine;
-        offset = Math.abs(wideLine - gutter) / 2;
-      } else {
-        // this.graphics.lineWidth = thinLine;
-        // offset = Math.abs(thinLine - gutter) / 2;
-        continue;
-      }
-
-      const w = this.cellSize.width + gutter;
-      const h = this.cellSize.height + gutter;
-      // 纵线
-      this.graphics.moveTo(i * w + offset, 0);
-      this.graphics.lineTo(i * w + offset, -this.uiTransform.height);
-      // 横线
-      this.graphics.moveTo(0, i * -h - offset);
-      this.graphics.lineTo(this.uiTransform.width, i * -h - offset);
-      // 绘制
-      this.graphics.stroke();
-    }
+  private _clear() {
+    this.grid.removeAllChildren();
   }
 
-  private _initLayout(gridSize: number, gutter: number) {
+  private _initLayout() {
     // 更新布局
+    this.layout.type = Layout.Type.GRID;
     this.layout.resizeMode = Layout.ResizeMode.CHILDREN;
     this.layout.startAxis = Layout.AxisDirection.HORIZONTAL;
-    this.layout.spacingX = this.layout.spacingY = this.layout.paddingTop = this.layout.paddingLeft = gutter;
+    // 无间距
+    this.layout.spacingX = this.layout.spacingY = 0;
+    // 无内边距
+    this.layout.paddingTop = this.layout.paddingBottom = this.layout.paddingLeft = this.layout.paddingRight = 0;
+    // 限制列数
     this.layout.constraint = Layout.Constraint.FIXED_COL;
-    this.layout.constraintNum = gridSize;
-    this.layout.cellSize = this.cellSize;
+    this.layout.constraintNum = CONSTRAINT_COLS;
+    // 格子大小
+    this.layout.cellSize = this.brickSize;
     this.layout.updateLayout();
   }
 
-  private _initSquares(gridSize: number, gutter: number) {
-    const halfGutter = gutter / 2;
-    // this.graphics.fillColor = Colors.CHESS_PIECE_BACKGROUND;
-
+  private _initCells() {
+    this.squares.length = 0;
     // 生成棋子坐标
-    for (let row = 0; row < gridSize; row++) {
+    for (let row = 0; row < this.rows; row++) {
       // 每行的Y坐标
-      const y = row * -(this.cellSize.height + gutter) - gutter - this.cellSize.height;
-      for (let col = 0; col < gridSize; col++) {
+      const y = row * -this.brickSize.height - this.brickSize.height;
+      for (let col = 0; col < this.cols; col++) {
         // 每列的X坐标
-        const x = col * (this.cellSize.width + gutter) + gutter;
+        const x = col * this.brickSize.width;
         // 添加包围盒
         this.squares.push({
           row,
           col,
-          boundingBox: new Rect(x - halfGutter, y - halfGutter, this.cellSize.width + halfGutter, this.cellSize.height + halfGutter),
+          boundingBox: new Rect(x, y, this.brickSize.width, this.brickSize.height),
         });
-
-        // this.graphics.roundRect(x, y, this.cellSize.width, this.cellSize.height, 8);
       }
     }
+  }
 
-    // this.graphics.fill();
+  private _createBrick() {
+    const node = instantiate(this.itemPrefab);
+    const ui = node.getComponent(UITransform) || node.addComponent(UITransform);
+    ui.setContentSize(this.brickSize);
+    const item = node.getComponent(GameBrick);
+    if (!item) {
+      node.destroy();
+      throw new Error('[Chessboard#_createBrick] GameBrick not found');
+    }
+
+    const theme = ThemeManager.instance.selectedTheme;
+    const key = math.randomRangeInt(0, theme.bricks.length);
+    item.init(theme.bricks[key]);
+    this.grid.addChild(node);
+    return node;
+  }
+
+  private _createEmpty() {
+    const node = new Node('__Empty__');
+    const ui = node.getComponent(UITransform) || node.addComponent(UITransform);
+    ui.setContentSize(this.brickSize);
+    this.grid.addChild(node);
+    return node;
   }
 }

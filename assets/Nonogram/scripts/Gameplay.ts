@@ -10,19 +10,23 @@ import { ResourceManager } from 'db://assets/Framework/managers/ResourceManager'
 import { NetManager } from 'db://assets/Nonogram/scripts/managers/NetManager';
 import { ToastManager } from 'db://assets/Framework/managers/ToastManager';
 import { SettingsPopup } from 'db://assets/Nonogram/scripts/popups/SettingsPopup';
-import { RewardPopup } from 'db://assets/Nonogram/scripts/popups/RewardPopup';
 import { ObjectPoolManager } from 'db://assets/Framework/managers/ObjectPoolManager';
-import { GameResult, GameScreen } from 'db://assets/Nonogram/scripts/screens/GameScreen';
+import { GameScreen } from 'db://assets/Nonogram/scripts/screens/GameScreen';
 import { SocialManager } from 'db://assets/Framework/factories/social/SocialManager';
 import { ThemeManager } from 'db://assets/Nonogram/scripts/managers/ThemeManager';
+import { GameSettingPopup } from 'db://assets/Nonogram/scripts/popups/GameSettingPopup';
+import { NoMatchPopup } from 'db://assets/Nonogram/scripts/popups/NoMatchPopup';
+import { LevelCompletedPopup } from 'db://assets/Nonogram/scripts/popups/LevelCompletedPopup';
 
 const { ccclass, property } = _decorator;
 
 declare module 'db://assets/Framework/managers/PopupManager' {
   interface PopupMap {
     SettingsPopup: typeof SettingsPopup;
-    RewardPopup: typeof RewardPopup;
+    GameSettingPopup: typeof GameSettingPopup;
+    NoMatchPopup: typeof NoMatchPopup;
     GameScreen: typeof GameScreen;
+    LevelCompletedPopup: typeof LevelCompletedPopup;
   }
 }
 
@@ -32,9 +36,11 @@ const SPINNER_ASSET = 'common/sprites/spinner/spriteFrame';
 const popups = [
   // Modal
   { popupClass: SettingsPopup, path: 'prefabs/popups/SettingsPopup', modal: true, priority: 1000 },
-  { popupClass: RewardPopup, path: 'prefabs/popups/RewardPopup', modal: true, priority: 1000 },
+  { popupClass: GameSettingPopup, path: 'prefabs/popups/GameSettingPopup', modal: true, priority: 1000 },
+  { popupClass: NoMatchPopup, path: 'prefabs/popups/NoMatchPopup', modal: true, priority: 1000 },
   // Fullscreen
-  { popupClass: GameScreen, path: 'prefabs/popups/GameScreen', modal: false, priority: 900 },
+  { popupClass: GameScreen, path: 'prefabs/popups/GameScreen', modal: false, priority: 800 },
+  { popupClass: LevelCompletedPopup, path: 'prefabs/popups/LevelCompletedPopup', modal: false, priority: 900 },
 ];
 
 @ccclass('Gameplay')
@@ -98,10 +104,7 @@ export class Gameplay extends Component {
       return;
     }
 
-    const result = await PopupManager.instance.show('GameScreen', level);
-    if (result === GameResult.Complete) {
-      EventManager.emit(EventManager.EventType.LEVEL_COMPLETED, level);
-    }
+    await PopupManager.instance.show('GameScreen', level);
   }
 
   private async _onProgress(progress: number) {

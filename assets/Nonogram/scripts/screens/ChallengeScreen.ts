@@ -33,8 +33,11 @@ export class ChallengeScreen extends BaseScreen {
 
   private readonly _challengePages: Map<number, CalendarPage> = new Map();
 
-  protected async onLoad() {
-    await super.onLoad();
+  protected onInit() {
+    this._initPages();
+  }
+
+  protected onEnable() {
     this.pageView.node.on(PageView.EventType.PAGE_TURNING, this._onPageTurning, this);
     this.indicatorPrev.node.on(Button.EventType.CLICK, this._onPrevPage, this);
     this.indicatorNext.node.on(Button.EventType.CLICK, this._onNextPage, this);
@@ -42,11 +45,7 @@ export class ChallengeScreen extends BaseScreen {
     EventManager.on(EventManager.EventType.LEVEL_COMPLETED, this._onLevelCompleted, this);
   }
 
-  protected async start() {
-    this._initPages();
-  }
-
-  protected async onDestroy() {
+  protected onDisable() {
     this.pageView.node.off(PageView.EventType.PAGE_TURNING, this._onPageTurning, this);
     this.indicatorPrev.node.off(Button.EventType.CLICK, this._onPrevPage, this);
     this.indicatorNext.node.off(Button.EventType.CLICK, this._onNextPage, this);

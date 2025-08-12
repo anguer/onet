@@ -2,12 +2,12 @@
   "ver": "1.1.50",
   "importer": "prefab",
   "imported": true,
-  "uuid": "dd77bf33-2495-4ba9-855c-132fddc4355b",
+  "uuid": "27897401-dd30-4cf6-9330-bd1c5580bc36",
   "files": [
     ".json"
   ],
   "subMetas": {},
   "userData": {
-    "syncNodeName": "RewardPopup"
+    "syncNodeName": "GameSettingPopup"
   }
 }

@@ -1,7 +1,7 @@
 [
   {
     "__type__": "cc.Prefab",
-    "_name": "SettingsPopup",
+    "_name": "GameSettingPopup",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_native": "",
@@ -13,7 +13,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "SettingsPopup",
+    "_name": "GameSettingPopup",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": null,
@@ -4012,7 +4012,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "btn_privacy",
+    "_name": "btn_home",
     "_objFlags": 512,
     "__editorExtras__": {},
     "_parent": {
@@ -4206,7 +4206,7 @@
       "b": 249,
       "a": 255
     },
-    "_string": "隐私政策",
+    "_string": "回到主页",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 42,
@@ -4409,7 +4409,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "btn_cs",
+    "_name": "btn_restart",
     "_objFlags": 512,
     "__editorExtras__": {},
     "_parent": {
@@ -4603,7 +4603,7 @@
       "b": 249,
       "a": 255
     },
-    "_string": "联系客服",
+    "_string": "重新开始",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 42,
@@ -5162,7 +5162,7 @@
     "fileId": "bacIbKKaVEeJSO9wdHfBrs"
   },
   {
-    "__type__": "651949h8HNO9KTjLxhAf1nW",
+    "__type__": "b4d9dqqdnNJJrhWo28QZZTM",
     "_name": "",
     "_objFlags": 0,
     "__editorExtras__": {},
@@ -5185,17 +5185,17 @@
     "vibrationToggle": {
       "__id__": 164
     },
-    "customerServiceButton": {
-      "__id__": 201
-    },
-    "privacyContractButton": {
+    "homeButton": {
       "__id__": 185
+    },
+    "restartButton": {
+      "__id__": 201
     },
     "_id": ""
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "198saFA0tG8r7H+5zy7xfu"
+    "fileId": "e8gw88zC5GA6aW648J0EXS"
   },
   {
     "__type__": "cc.PrefabInfo",

@@ -15,8 +15,13 @@ export class MainScreen extends BaseScreen {
   @property({ type: Button }) private startGameButton: Button;
   @property({ type: Label }) private startGameLabel: Label;
 
-  protected onEnable() {
+  protected defaultShow = true;
+
+  protected onInit() {
     this._updateUI();
+  }
+
+  protected onEnable() {
     this.startGameButton.node.on(Button.EventType.CLICK, this._onStart, this);
     EventManager.on(EventManager.EventType.LEVEL_COMPLETED, this._onLevelCompleted, this);
   }

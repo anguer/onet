@@ -2,12 +2,12 @@
   "ver": "1.1.50",
   "importer": "prefab",
   "imported": true,
-  "uuid": "7c2f2d22-e0bd-41b3-8ec0-0e508d88c41d",
+  "uuid": "aee4b423-d7ee-4501-98c2-95f8f69ad289",
   "files": [
     ".json"
   ],
   "subMetas": {},
   "userData": {
-    "syncNodeName": "Brick"
+    "syncNodeName": "NoMatchPopup"
   }
 }
