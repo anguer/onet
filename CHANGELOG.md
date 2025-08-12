@@ -2,6 +2,13 @@
 
 # Changelog
 
+## [1.1.4](https://github.com/anguer/onet/compare/v1.1.3...v1.1.4) (2025-08-12)
+
+
+### Bug Fixes
+
+* remove status bar for weixin ([ea55fac](https://github.com/anguer/onet/commit/ea55fac151b536d68f887ad1a3c198a9bb78cf53))
+
 ## [1.1.3](https://github.com/anguer/onet/compare/v1.1.2...v1.1.3) (2025-08-12)
 
 
