@@ -1,16 +1,15 @@
-import { UITransform } from 'cc';
-import { Ad } from 'db://assets/Framework/factories/ad/Ad';
+import { Ad, BannerAdOptions, CustomAdOptions, RewardedAdOptions } from 'db://assets/Framework/factories/ad/Ad';
 
 export class InternalAd extends Ad {
-  showRewardedAd(adUnitId: string): Promise<{ isEnded: boolean }> {
+  showRewardedAd(options?: RewardedAdOptions): Promise<{ isEnded: boolean }> {
     return Promise.resolve({ isEnded: true });
   }
 
-  showBannerAd(adUnitId: string, uiTransform: UITransform): Promise<() => void> {
+  showBannerAd(options?: BannerAdOptions): Promise<() => void> {
     return Promise.resolve(() => {});
   }
 
-  showCustomAd(adUnitId: string, uiTransform: UITransform): Promise<() => void> {
+  showCustomAd(options?: CustomAdOptions): Promise<() => void> {
     return Promise.resolve(() => {});
   }
 }

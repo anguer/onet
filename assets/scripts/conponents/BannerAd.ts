@@ -1,8 +1,6 @@
 import { _decorator, Component, UITransform } from 'cc';
 import { AdManager } from 'db://assets/Framework/factories/ad/AdManager';
-import { ad_banner_unit_id } from 'db://assets/scripts/utils/Constants';
-import { LogManager } from 'db://assets/Framework/managers/LogManager';
-const { ccclass, property } = _decorator;
+const { ccclass } = _decorator;
 
 interface Func {
   (): void;
@@ -17,11 +15,7 @@ export class BannerAd extends Component {
   }
 
   public async show() {
-    try {
-      this._hide = await AdManager.instance.showCustomAd(ad_banner_unit_id, this.transform);
-    } catch (e) {
-      LogManager.warn('[BannerAd#show]', e);
-    }
+    this._hide = await AdManager.instance.showCustomAd({ uiTransform: this.transform });
   }
 
   public hide() {

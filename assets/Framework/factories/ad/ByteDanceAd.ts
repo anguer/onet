@@ -1,19 +1,20 @@
 import { Rect, UITransform, view } from 'cc';
-import { Ad, AdError } from 'db://assets/Framework/factories/ad/Ad';
+import { Ad, AdError, BannerAdOptions, CustomAdOptions, RewardedAdOptions } from 'db://assets/Framework/factories/ad/Ad';
 import { LogManager } from 'db://assets/Framework/managers/LogManager';
 
 export class ByteDanceAd extends Ad {
   // 全局广告对象缓存
   private readonly _rewardedAds: Map<string, any> = new Map();
 
-  showRewardedAd(adUnitId: string): Promise<{ isEnded: boolean }> {
+  showRewardedAd(options?: RewardedAdOptions): Promise<{ isEnded: boolean }> {
+    const { adUnitId = '3ehjd1n78191fnh9mf' } = Object.assign({}, options);
     return new Promise<{ isEnded: boolean }>(async (resolve) => {
       try {
         LogManager.trace('[ByteDanceAd#showRewardedAd]', adUnitId);
         const ad = await this._createRewardedAd(adUnitId);
 
         const onClose = (res: WechatMinigame.RewardedVideoAdOnCloseListenerResult) => {
-          LogManager.trace('[ByteDanceAd#onClose]', res.isEnded);
+          LogManager.trace('[ByteDanceAd#showRewardedAd]', { isEnded: res.isEnded });
           ad.offClose(onClose);
           resolve({ isEnded: res.isEnded });
         };
@@ -27,8 +28,9 @@ export class ByteDanceAd extends Ad {
     });
   }
 
-  showBannerAd(adUnitId: string, uiTransform: UITransform): Promise<() => void> {
-    return new Promise<() => void>(async (resolve, reject) => {
+  showBannerAd(options?: BannerAdOptions): Promise<() => void> {
+    const { adUnitId = 'kk9hbi94f876pji8qk', uiTransform } = Object.assign({}, options);
+    return new Promise<() => void>(async (resolve) => {
       try {
         LogManager.trace('[ByteDanceAd#showBannerAd]', adUnitId);
         const ad = await this._createBannerAd(adUnitId, uiTransform);
@@ -39,13 +41,15 @@ export class ByteDanceAd extends Ad {
           ad.destroy();
         });
       } catch (e) {
-        reject(new AdError(e.errCode || -1, e.errMsg || e.message));
+        LogManager.error('[ByteDanceAd#showBannerAd]', new AdError(e.errCode || -1, e.errMsg || e.message));
+        resolve(() => {});
       }
     });
   }
 
-  showCustomAd(adUnitId: string, uiTransform: UITransform): Promise<() => void> {
-    return new Promise<() => void>(async (resolve, reject) => {
+  showCustomAd(options?: CustomAdOptions): Promise<() => void> {
+    const { adUnitId = 'kk9hbi94f876pji8qk', uiTransform } = Object.assign({}, options);
+    return new Promise<() => void>(async (resolve) => {
       try {
         LogManager.trace('[ByteDanceAd#showCustomAd]', adUnitId);
         const ad = await this._createBannerAd(adUnitId, uiTransform);
@@ -56,7 +60,8 @@ export class ByteDanceAd extends Ad {
           ad.destroy();
         });
       } catch (e) {
-        reject(new AdError(e.errCode || -1, e.errMsg || e.message));
+        LogManager.error('[ByteDanceAd#showCustomAd]', new AdError(e.errCode || -1, e.errMsg || e.message));
+        resolve(() => {});
       }
     });
   }
@@ -71,7 +76,7 @@ export class ByteDanceAd extends Ad {
 
       // 初始化
       ad = (tt as any).createRewardedVideoAd({
-        adUnitId: '3ehjd1n78191fnh9mf',
+        adUnitId: adUnitId,
         multiton: false,
       })!;
       this._rewardedAds.set(adUnitId, ad);
@@ -103,8 +108,8 @@ export class ByteDanceAd extends Ad {
 
       // 初始化
       const ad = (tt as any).createBannerAd({
-        adUnitId: 'kk9hbi94f876pji8qk',
-        adIntervals: 60,
+        adUnitId: adUnitId,
+        adIntervals: 120,
         style: {
           left: rect.x,
           top: rect.y,

@@ -1,19 +1,20 @@
 import { Rect, UITransform, view } from 'cc';
-import { AdError, Ad } from 'db://assets/Framework/factories/ad/Ad';
+import { AdError, Ad, RewardedAdOptions, BannerAdOptions, CustomAdOptions } from 'db://assets/Framework/factories/ad/Ad';
 import { LogManager } from 'db://assets/Framework/managers/LogManager';
 
 export class WeChatAd extends Ad {
   // 全局广告对象缓存
   private readonly _rewardedAds: Map<string, WechatMinigame.RewardedVideoAd> = new Map();
 
-  showRewardedAd(adUnitId: string): Promise<{ isEnded: boolean }> {
-    return new Promise<{ isEnded: boolean }>(async (resolve, reject) => {
+  showRewardedAd(options?: RewardedAdOptions): Promise<{ isEnded: boolean }> {
+    const { adUnitId = 'adunit-0097d391683d7d0c' } = Object.assign({}, options);
+    return new Promise<{ isEnded: boolean }>(async (resolve) => {
       try {
         LogManager.trace('[WeChatAd#showRewardedAd]', adUnitId);
         const ad = await this._createRewardedAd(adUnitId);
 
         const onClose = (res: WechatMinigame.RewardedVideoAdOnCloseListenerResult) => {
-          LogManager.trace('[WeChatAd#onClose]', res.isEnded);
+          LogManager.trace('[WeChatAd#showRewardedAd]', { isEnded: res.isEnded });
           ad.offClose(onClose);
           resolve({ isEnded: res.isEnded });
         };
@@ -21,13 +22,15 @@ export class WeChatAd extends Ad {
 
         await ad.show();
       } catch (e) {
-        reject(new AdError(e.errCode || -1, e.errMsg || e.message));
+        LogManager.error('[WeChatAd#showRewardedAd]', new AdError(e.errCode || -1, e.errMsg || e.message));
+        resolve({ isEnded: true });
       }
     });
   }
 
-  showBannerAd(adUnitId: string, uiTransform: UITransform): Promise<() => void> {
-    return new Promise<() => void>(async (resolve, reject) => {
+  showBannerAd(options?: BannerAdOptions): Promise<() => void> {
+    const { adUnitId = 'adunit-52492434df19737c', uiTransform } = Object.assign({}, options);
+    return new Promise<() => void>(async (resolve) => {
       try {
         LogManager.trace('[WeChatAd#showBannerAd]', adUnitId);
         const ad = await this._createBannerAd(adUnitId, uiTransform);
@@ -38,13 +41,15 @@ export class WeChatAd extends Ad {
           ad.destroy();
         });
       } catch (e) {
-        reject(new AdError(e.errCode || -1, e.errMsg || e.message));
+        LogManager.error('[WeChatAd#showBannerAd]', new AdError(e.errCode || -1, e.errMsg || e.message));
+        resolve(() => {});
       }
     });
   }
 
-  showCustomAd(adUnitId: string, uiTransform: UITransform): Promise<() => void> {
-    return new Promise<() => void>(async (resolve, reject) => {
+  showCustomAd(options?: CustomAdOptions): Promise<() => void> {
+    const { adUnitId = 'adunit-52492434df19737c', uiTransform } = Object.assign({}, options);
+    return new Promise<() => void>(async (resolve) => {
       try {
         LogManager.trace('[WeChatAd#showCustomAd]', adUnitId);
         const ad = await this._createCustomAd(adUnitId, uiTransform);
@@ -55,7 +60,8 @@ export class WeChatAd extends Ad {
           ad.destroy();
         });
       } catch (e) {
-        return reject(new AdError(e.errCode || -1, e.errMsg || e.message));
+        LogManager.error('[WeChatAd#showCustomAd]', new AdError(e.errCode || -1, e.errMsg || e.message));
+        resolve(() => {});
       }
     });
   }
@@ -107,7 +113,7 @@ export class WeChatAd extends Ad {
       // 初始化
       const ad = wx.createBannerAd({
         adUnitId: adUnitId,
-        // adIntervals: 30,
+        // adIntervals: 120,
         style: {
           left: rect.x,
           top: rect.y,
@@ -159,7 +165,7 @@ export class WeChatAd extends Ad {
       // 初始化
       const ad = wx.createCustomAd({
         adUnitId: adUnitId,
-        adIntervals: 60,
+        adIntervals: 120,
         style: {
           left: rect.x,
           top: rect.y,
@@ -171,7 +177,7 @@ export class WeChatAd extends Ad {
       const timer = setTimeout(() => {
         ad.destroy();
         reject(new AdError(-1, 'Timeout'));
-      }, 3000);
+      }, 2000);
 
       const onLoad = () => {
         clearTimeout(timer);

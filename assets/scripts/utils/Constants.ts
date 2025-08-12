@@ -1,12 +1,4 @@
-import { Color, Vec3 } from 'cc';
-
-export const ad_rewarded_unit_id = 'adunit-0097d391683d7d0c';
-export const ad_banner_unit_id = 'adunit-52492434df19737c';
-
-export const scale_xs = new Vec3(0.6, 0.6, 1);
-export const scale_small = new Vec3(0.8, 0.8, 1);
-export const scale_normal = new Vec3(1, 1, 1);
-export const scale_large = new Vec3(1.2, 1.2, 1);
+import { Color } from 'cc';
 
 export const Colors = {
   background: new Color(65, 237, 195),
@@ -37,14 +29,6 @@ export const Colors = {
   GUIDELINE: new Color(0, 95, 234, 127),
   GUIDELINE_RECT: new Color(251, 146, 60),
   GUIDELINE_ARROW: new Color(84, 58, 164),
-} as const;
-
-export const PropertyGroups = {
-  LevelCompleted: { id: 'LevelCompleted', name: 'LevelCompleted' },
-  Game: { id: 'Game', name: 'Game' },
-  ChessboardSprites: { id: 'ChessboardSprites', name: 'ChessboardSprites' },
-  UserInfo: { id: 'UserInfo', name: 'UserInfo' },
-  LeaderboardTop3: { id: 'LeaderboardTop3', name: 'LeaderboardTop3' },
 } as const;
 
 // 客户端 → 服务端

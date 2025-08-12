@@ -10,6 +10,7 @@ import { PopupManager } from 'db://assets/Framework/managers/PopupManager';
 import { GameSettingResult } from 'db://assets/scripts/popups/GameSettingPopup';
 import { LevelCompletedResult } from 'db://assets/scripts/popups/LevelCompletedPopup';
 import EventManager from 'db://assets/scripts/managers/EventManager';
+import { AdManager } from 'db://assets/Framework/factories/ad/AdManager';
 
 const { ccclass, property } = _decorator;
 
@@ -113,6 +114,8 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
   @Throttle()
   private async _onUseHint() {
     AudioManager.instance.playEffect('common/audio/click1');
+    const result = await AdManager.instance.showRewardedAd();
+    console.log('显示激励视频广告', result);
   }
 
   @Throttle()
