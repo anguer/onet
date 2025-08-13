@@ -1,9 +1,9 @@
-import { _decorator, Button, Label, Node, Prefab, UIOpacity } from 'cc';
+import { _decorator, Button, EventTouch, Label, Node, Prefab, UIOpacity } from 'cc';
 import { LogManager } from 'db://assets/Framework/managers/LogManager';
 import { NonogramLevel } from 'db://assets/scripts/models/NonogramLevel';
 import { TweenUtils } from 'db://assets/Framework/lib/TweenUtils';
 import { BasePopup } from 'db://assets/Framework/components/BasePopup';
-import { Chessboard } from 'db://assets/scripts/utils/Chessboard';
+import { Chessboard, DropMode, LevelData } from 'db://assets/scripts/utils/Chessboard';
 import { Throttle } from 'db://assets/Framework/decorators/throttle';
 import { AudioManager } from 'db://assets/Framework/managers/AudioManager';
 import { PopupManager } from 'db://assets/Framework/managers/PopupManager';
@@ -56,29 +56,36 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
     const uiOpacity = this.node.getComponent(UIOpacity) || this.node.addComponent(UIOpacity);
     uiOpacity.opacity = 0;
 
-    this._chessboard = new Chessboard(this.chessboardNode, cells, this.brickPrefab);
+    const data: LevelData = {
+      itemCount: 8,
+      tiles: cells,
+      dropMode: DropMode.None,
+    };
+
+    this._chessboard = new Chessboard(this.chessboardNode, data, this.brickPrefab);
     this.displayName.string = level.displayName;
     LogManager.info('[GameScreen#onInit]', level);
   }
 
-  protected async onBeforeShow() {
-    this.settingBtn.node.on(Button.EventType.CLICK, this._onSetting, this);
-    this.itemHint.node.on(Button.EventType.CLICK, this._onUseHint, this);
-    this.itemRefresh.node.on(Button.EventType.CLICK, this._onUseRefresh, this);
-    this.itemBomb.node.on(Button.EventType.CLICK, this._onUseBomb, this);
-  }
+  protected async onBeforeShow() {}
 
   protected async onAfterShow() {
     this.pause();
     await this._chessboard.initTiles();
+    this.settingBtn.node.on(Button.EventType.CLICK, this._onSetting, this);
+    this.itemHint.node.on(Button.EventType.CLICK, this._onUseHint, this);
+    this.itemRefresh.node.on(Button.EventType.CLICK, this._onUseRefresh, this);
+    this.itemBomb.node.on(Button.EventType.CLICK, this._onUseBomb, this);
+    this.chessboardNode.on(Node.EventType.TOUCH_END, this._onTouchEnd, this);
     this.resume();
   }
 
   protected async onBeforeHide() {
     this.settingBtn.node.off(Button.EventType.CLICK, this._onSetting, this);
-    this.itemHint.node.on(Button.EventType.CLICK, this._onUseHint, this);
-    this.itemRefresh.node.on(Button.EventType.CLICK, this._onUseRefresh, this);
-    this.itemBomb.node.on(Button.EventType.CLICK, this._onUseBomb, this);
+    this.itemHint.node.off(Button.EventType.CLICK, this._onUseHint, this);
+    this.itemRefresh.node.off(Button.EventType.CLICK, this._onUseRefresh, this);
+    this.itemBomb.node.off(Button.EventType.CLICK, this._onUseBomb, this);
+    this.chessboardNode.off(Node.EventType.TOUCH_END, this._onTouchEnd, this);
   }
 
   protected async onAfterHide() {}
@@ -128,6 +135,11 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
   private async _onUseBomb() {
     AudioManager.instance.playEffect('common/audio/click1');
     await this.completeLevel();
+  }
+
+  @Throttle()
+  private _onTouchEnd(event: EventTouch) {
+    this._chessboard.selectTile(event);
   }
 
   // ========== 游戏逻辑 ==========

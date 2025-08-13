@@ -18,17 +18,27 @@ export class GameBrick extends Component {
     this._updateUI();
   }
 
-  protected onEnable() {
-    this.node.on(Node.EventType.TOUCH_END, this._onTouchEnd, this);
+  private _itemIdx: number = -1;
+  public get itemIdx(): number {
+    return this._itemIdx;
   }
 
-  protected onDisable() {
-    this.node.off(Node.EventType.TOUCH_END, this._onTouchEnd, this);
-  }
+  // protected onEnable() {
+  //   this.node.on(Node.EventType.TOUCH_END, this._onTouchEnd, this);
+  // }
+  //
+  // protected onDisable() {
+  //   this.node.off(Node.EventType.TOUCH_END, this._onTouchEnd, this);
+  // }
 
-  public init(spriteFrame: SpriteFrame) {
+  public init(itemIdx: number, spriteFrame: SpriteFrame) {
+    this._itemIdx = itemIdx;
     this.image.spriteFrame = spriteFrame;
     this._updateUI();
+  }
+
+  public toggle(checked: boolean) {
+    this.isChecked = checked;
   }
 
   @Throttle()
