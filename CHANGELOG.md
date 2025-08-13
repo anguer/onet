@@ -2,6 +2,13 @@
 
 # Changelog
 
+## [1.1.6](https://github.com/anguer/onet/compare/v1.1.5...v1.1.6) (2025-08-13)
+
+
+### Bug Fixes
+
+* 优化棋盘管理 ([4a0d318](https://github.com/anguer/onet/commit/4a0d318d295f13fc7bd13b41e52dbd9f531095da))
+
 ## [1.1.5](https://github.com/anguer/onet/compare/v1.1.4...v1.1.5) (2025-08-12)
 
 
