@@ -2,6 +2,13 @@
 
 # Changelog
 
+## [1.1.7](https://github.com/anguer/onet/compare/v1.1.6...v1.1.7) (2025-08-13)
+
+
+### Bug Fixes
+
+* 实现棋盘砖块生成和消除算法 ([e24733c](https://github.com/anguer/onet/commit/e24733c08943e7ea33615d5606c3bcdeec12d454))
+
 ## [1.1.6](https://github.com/anguer/onet/compare/v1.1.5...v1.1.6) (2025-08-13)
 
 
