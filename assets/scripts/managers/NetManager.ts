@@ -6,7 +6,6 @@ import { dayjs } from 'db://assets/scripts/utils/Dayjs';
 import { SocialManager } from 'db://assets/Framework/factories/social/SocialManager';
 import { Client, Room } from 'db://assets/Framework/colyseus';
 import { ClientMessageType, ServerMessageType } from 'db://assets/scripts/utils/Constants';
-import { ToastManager } from 'db://assets/Framework/managers/ToastManager';
 
 export interface AuthTokens {
   accessToken: string;
@@ -148,13 +147,11 @@ export class NetManager {
       return;
     }
 
-    ToastManager.instance.showLoading();
     LogManager.trace('[NetManager#Lobby]', `断线重连 ${this._reconnectDelay}ms`);
     this._reconnectTimer = setTimeout(async () => {
       this._reconnectTimer = null;
       try {
         await this.connectLobbyOnce();
-        ToastManager.instance.hideLoading();
       } catch (e) {
         LogManager.error('[NetManager#Lobby]', '重连失败', e);
         // 指数退避，最大不超过 10s

@@ -70,7 +70,7 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
 
   protected async onAfterShow() {
     this.pause();
-    await this._chessboard.initBricks();
+    await this._chessboard.initTiles();
     this.resume();
   }
 
