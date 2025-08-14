@@ -2,6 +2,13 @@
 
 # Changelog
 
+## [1.1.8](https://github.com/anguer/onet/compare/v1.1.7...v1.1.8) (2025-08-14)
+
+
+### Bug Fixes
+
+* 完善游戏核心玩法和道具功能 ([05bda41](https://github.com/anguer/onet/commit/05bda415602bf9b0b090e766f4db13fb82778192))
+
 ## [1.1.7](https://github.com/anguer/onet/compare/v1.1.6...v1.1.7) (2025-08-13)
 
 
