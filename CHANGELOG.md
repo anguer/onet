@@ -2,6 +2,13 @@
 
 # Changelog
 
+## [1.1.9](https://github.com/anguer/onet/compare/v1.1.8...v1.1.9) (2025-08-14)
+
+
+### Bug Fixes
+
+* 完善砖块动态移动逻辑 ([7a856e8](https://github.com/anguer/onet/commit/7a856e8961e7a18a649f260c8a0ca04c00639b5d))
+
 ## [1.1.8](https://github.com/anguer/onet/compare/v1.1.7...v1.1.8) (2025-08-14)
 
 
