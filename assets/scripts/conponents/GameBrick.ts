@@ -1,5 +1,4 @@
-import { _decorator, Color, Component, Node, Sprite, SpriteFrame } from 'cc';
-import { Throttle } from 'db://assets/Framework/decorators/throttle';
+import { _decorator, Color, Component, Sprite, SpriteFrame } from 'cc';
 
 const { ccclass, property } = _decorator;
 
@@ -23,15 +22,7 @@ export class GameBrick extends Component {
     return this._itemIdx;
   }
 
-  // protected onEnable() {
-  //   this.node.on(Node.EventType.TOUCH_END, this._onTouchEnd, this);
-  // }
-  //
-  // protected onDisable() {
-  //   this.node.off(Node.EventType.TOUCH_END, this._onTouchEnd, this);
-  // }
-
-  public init(itemIdx: number, spriteFrame: SpriteFrame) {
+  public updateUI(itemIdx: number, spriteFrame: SpriteFrame) {
     this._itemIdx = itemIdx;
     this.image.spriteFrame = spriteFrame;
     this._updateUI();
@@ -41,9 +32,8 @@ export class GameBrick extends Component {
     this.isChecked = checked;
   }
 
-  @Throttle()
-  private _onTouchEnd() {
-    this.isChecked = !this.isChecked;
+  public highlight(highlight: boolean) {
+    this.background.color = highlight ? new Color(253, 70, 103) : Color.WHITE;
   }
 
   private _updateUI() {

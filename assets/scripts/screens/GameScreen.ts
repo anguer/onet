@@ -103,43 +103,63 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
   @Throttle()
   private async _onSetting() {
     AudioManager.instance.playEffect('common/audio/click1');
+    this.pause();
     const result = await PopupManager.instance.show('GameSettingPopup', {});
     switch (result) {
       case GameSettingResult.Home:
         await this.success(GameResult.Close);
         break;
       case GameSettingResult.Restart:
-        this.pause();
         await this._chessboard.reset();
-        this.resume();
         break;
       case GameSettingResult.Close:
         break;
     }
+    this.resume();
   }
 
   @Throttle()
   private async _onUseHint() {
+    this.pause();
+
+    // const result = await AdManager.instance.showRewardedAd();
+    // console.log('显示激励视频广告', result);
     AudioManager.instance.playEffect('common/audio/click1');
-    const result = await AdManager.instance.showRewardedAd();
-    console.log('显示激励视频广告', result);
+    await this._chessboard.highlightHintPair();
+
+    this.resume();
   }
 
   @Throttle()
   private async _onUseRefresh() {
+    this.pause();
+
     AudioManager.instance.playEffect('common/audio/click1');
-    const result = await PopupManager.instance.show('NoMatchPopup', { progress: 70 });
+    this._chessboard.refresh();
+
+    this.resume();
   }
 
   @Throttle()
   private async _onUseBomb() {
+    this.pause();
+
     AudioManager.instance.playEffect('common/audio/click1');
-    await this.completeLevel();
+    await this._chessboard.eliminateAnyPair();
+    await this.checkState();
+
+    this.resume();
   }
 
-  @Throttle()
-  private _onTouchEnd(event: EventTouch) {
-    this._chessboard.selectTile(event);
+  @Throttle(50)
+  private async _onTouchEnd(event: EventTouch) {
+    this.pause();
+
+    // 选择或消除
+    await this._chessboard.selectTile(event);
+    await this.checkState();
+
+    this.resume();
   }
 
   // ========== 游戏逻辑 ==========
@@ -158,6 +178,26 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
     this.itemBomb.interactable = true;
   }
 
+  /**
+   * 检查游戏状态
+   * @private
+   */
+  private async checkState() {
+    // 检查是否全部消除
+    if (this._chessboard.isCleared) {
+      await this.completeLevel();
+    }
+
+    // 检查是否仍有可消除
+    if (!this._chessboard.hasAnyMatch) {
+      const result = await PopupManager.instance.show('NoMatchPopup', { progress: 70 });
+    }
+  }
+
+  /**
+   * 完成关卡
+   * @private
+   */
   private async completeLevel() {
     EventManager.emit(EventManager.EventType.LEVEL_COMPLETED, this.level);
     const result = await PopupManager.instance.show('LevelCompletedPopup', { clearTime: 345 });
