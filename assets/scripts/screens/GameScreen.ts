@@ -11,6 +11,7 @@ import { GameSettingResult } from 'db://assets/scripts/popups/GameSettingPopup';
 import { LevelCompletedResult } from 'db://assets/scripts/popups/LevelCompletedPopup';
 import EventManager from 'db://assets/scripts/managers/EventManager';
 import { AdManager } from 'db://assets/Framework/factories/ad/AdManager';
+import { NoMatchResult } from 'db://assets/scripts/popups/NoMatchPopup';
 
 const { ccclass, property } = _decorator;
 
@@ -18,23 +19,6 @@ const { ccclass, property } = _decorator;
 export enum GameResult {
   Close = 'Close',
 }
-
-const cells = [
-  [0, 0, 0, 0, 0, 0, 1, 1],
-  [1, 0, 0, 0, 0, 0, 1, 1],
-  [1, 1, 0, 0, 0, 0, 1, 1],
-  [0, 1, 1, 0, 0, 0, 1, 1],
-  [1, 1, 1, 0, 0, 0, 0, 1],
-  [0, 1, 1, 0, 0, 0, 0, 1],
-  [1, 1, 1, 0, 0, 0, 0, 1],
-  [1, 1, 1, 0, 0, 0, 0, 1],
-  [0, 1, 0, 0, 0, 1, 1, 1],
-  [1, 1, 1, 1, 0, 0, 1, 1],
-  [0, 0, 1, 0, 0, 0, 1, 1],
-  [1, 1, 1, 0, 0, 0, 0, 1],
-  [1, 1, 1, 1, 1, 1, 0, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1],
-];
 
 @ccclass('GameScreen')
 export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
@@ -58,8 +42,23 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
 
     const data: LevelData = {
       itemCount: 8,
-      tiles: cells,
-      dropMode: DropMode.None,
+      tiles: [
+        [0, 0, 0, 0, 0, 0, 1, 1],
+        [1, 0, 0, 0, 0, 0, 1, 1],
+        [1, 1, 0, 0, 0, 0, 1, 1],
+        [0, 1, 1, 0, 0, 0, 1, 1],
+        [1, 1, 1, 0, 0, 0, 0, 1],
+        [0, 1, 1, 0, 0, 0, 0, 1],
+        [1, 1, 1, 0, 0, 0, 0, 1],
+        [1, 1, 1, 0, 0, 0, 0, 1],
+        [0, 1, 0, 0, 0, 1, 1, 1],
+        [1, 1, 1, 1, 0, 0, 1, 1],
+        [0, 0, 1, 0, 0, 0, 1, 1],
+        [1, 1, 1, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1],
+      ],
+      dropMode: DropMode.HorizontalOutward,
     };
 
     this._chessboard = new Chessboard(this.chessboardNode, data, this.brickPrefab);
@@ -122,8 +121,8 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
   private async _onUseHint() {
     this.pause();
 
-    // const result = await AdManager.instance.showRewardedAd();
-    // console.log('显示激励视频广告', result);
+    const result = await AdManager.instance.showRewardedAd();
+    console.log('显示激励视频广告', result);
     AudioManager.instance.playEffect('common/audio/click1');
     await this._chessboard.highlightHintPair();
 
@@ -186,11 +185,18 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
     // 检查是否全部消除
     if (this._chessboard.isCleared) {
       await this.completeLevel();
+      return;
     }
 
     // 检查是否仍有可消除
-    if (!this._chessboard.hasAnyMatch) {
-      const result = await PopupManager.instance.show('NoMatchPopup', { progress: 70 });
+    if (this._chessboard.hasAnyMatch) {
+      return;
+    }
+
+    // 提示玩家
+    const result = await PopupManager.instance.show('NoMatchPopup', { progress: 70 });
+    if (result === NoMatchResult.Refresh) {
+      this._chessboard.refresh();
     }
   }
 

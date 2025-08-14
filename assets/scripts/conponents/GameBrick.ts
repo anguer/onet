@@ -17,13 +17,7 @@ export class GameBrick extends Component {
     this._updateUI();
   }
 
-  private _itemIdx: number = -1;
-  public get itemIdx(): number {
-    return this._itemIdx;
-  }
-
-  public updateUI(itemIdx: number, spriteFrame: SpriteFrame) {
-    this._itemIdx = itemIdx;
+  public updateUI(spriteFrame: SpriteFrame) {
     this.image.spriteFrame = spriteFrame;
     this._updateUI();
   }

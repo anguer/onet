@@ -1,4 +1,4 @@
-import { Color, EventTouch, Graphics, instantiate, Layout, Node, Prefab, Size, SpriteFrame, UITransform, Vec2, Vec3 } from 'cc';
+import { Color, EventTouch, Graphics, instantiate, Layout, math, Node, Prefab, Size, SpriteFrame, tween, UITransform, Vec2, Vec3 } from 'cc';
 import { GameBrick } from 'db://assets/scripts/conponents/GameBrick';
 import { sleep } from 'db://assets/Framework/lib/Share';
 import { ThemeManager } from 'db://assets/scripts/managers/ThemeManager';
@@ -8,6 +8,7 @@ export enum TileType {
   Empty = 0,
   Brick = 1,
   Ice = 2,
+  Wall = 3,
 }
 
 // 移动模式
@@ -41,6 +42,89 @@ export interface LevelData {
 
 type PathCell = { row: number; col: number };
 
+type Move = { from: [number, number]; to: [number, number] };
+
+const MOVE_DURATION: number = 0.2;
+
+class ChessboardCell {
+  private _tile: Node | null = null;
+  private _itemIdx: number | null = null;
+
+  public get itemIdx(): number | null {
+    return this._itemIdx;
+  }
+
+  private get brick(): GameBrick | null {
+    if (!this._tile) return null;
+    return this._tile.getComponent(GameBrick);
+  }
+
+  constructor(
+    public readonly row: number,
+    public readonly col: number,
+    public readonly node: Node,
+  ) {}
+
+  public addTile(tile: Node, itemIdx: number) {
+    this._tile = tile;
+    this._itemIdx = itemIdx;
+    this.node.addChild(tile);
+    tile.setPosition(Vec3.ZERO);
+  }
+
+  public updateItem(itemIdx: number, sf: SpriteFrame) {
+    this._itemIdx = itemIdx;
+    this.brick?.updateUI(sf);
+  }
+
+  public async moveTile(to: ChessboardCell): Promise<void> {
+    if (!this._tile || this._itemIdx === null) return;
+
+    const tile = this._tile;
+    const itemIdx = this._itemIdx;
+    this._tile = this._itemIdx = null;
+
+    return new Promise<void>((resolve) => {
+      tween(tile)
+        .to(MOVE_DURATION, { worldPosition: to.node.worldPosition }, { easing: 'quadOut' })
+        .call(() => {
+          to.addTile(tile, itemIdx);
+          resolve();
+        })
+        .start();
+    });
+  }
+
+  public async delTile(): Promise<void> {
+    if (this._tile) {
+      const tile = this._tile;
+      await new Promise<void>((resolve) => {
+        tween(tile)
+          .to(0.2, { scale: Vec3.ZERO }, { easing: 'backIn' })
+          .call(() => resolve())
+          .destroySelf()
+          .start();
+      });
+    }
+
+    this._tile = null;
+    this._itemIdx = null;
+    // this.node.removeAllChildren();
+  }
+
+  public isSame(other: ChessboardCell): boolean {
+    return this._itemIdx !== null && this._itemIdx === other._itemIdx;
+  }
+
+  public highlight(val: boolean) {
+    this.brick?.highlight(val);
+  }
+
+  public toggle(val: boolean) {
+    this.brick?.toggle(val);
+  }
+}
+
 /**
  * 棋盘管理类
  */
@@ -50,7 +134,7 @@ export class Chessboard {
   // 棋盘网格行数
   private readonly rows: number = 14;
   // 棋盘格子的坐标和节点映射，e.g. `1x1` => Node
-  private readonly cells: Map<CellKey, Node> = new Map();
+  private readonly cells: Map<CellKey, ChessboardCell> = new Map();
   // 控制棋盘UI
   private readonly boardUI: UITransform;
   // 控制棋盘布局
@@ -104,9 +188,25 @@ export class Chessboard {
    * 初始化瓦片
    */
   public async initTiles() {
+    const modes = [
+      DropMode.None,
+      DropMode.Down,
+      DropMode.Up,
+      DropMode.Left,
+      DropMode.Right,
+      DropMode.HorizontalInward,
+      DropMode.HorizontalOutward,
+      DropMode.VerticalInward,
+      DropMode.VerticalOutward,
+    ];
+    // TODO: 暂时随机移动模式，方便测试
+    this.data.dropMode = modes[math.randomRangeInt(0, modes.length)];
+
     const { bricks, blocks } = this._parseLevelTiles();
     this._createBlocks(blocks);
     await this._createBricks(bricks);
+
+    await this._moveTilesAfterMatch();
   }
 
   /**
@@ -114,9 +214,7 @@ export class Chessboard {
    */
   public async reset(): Promise<void> {
     // 清除所有砖块节点
-    this.cells.forEach((cell) => {
-      cell.removeAllChildren();
-    });
+    await Promise.all(Array.from(this.cells.values()).map((cell) => cell.delTile()));
 
     // 重置瓦片状态
     this.tiles = this.data.tiles.map((row) => [...row]);
@@ -125,9 +223,7 @@ export class Chessboard {
     this.firstSelection = null;
 
     // 重新生成砖块
-    const { bricks, blocks } = this._parseLevelTiles();
-    this._createBlocks(blocks);
-    await this._createBricks(bricks);
+    await this.initTiles();
   }
 
   /**
@@ -151,23 +247,22 @@ export class Chessboard {
     // 获取当前砖块节点
     const bricksNodes = remaining
       .map((tile) => {
-        const node = this.cells.get(`${tile.row}x${tile.col}`)?.children[0];
-        return { tile, node };
+        const cell = this.cells.get(`${tile.row}x${tile.col}`);
+        return { tile, cell };
       })
-      .filter((x) => x.node);
+      .filter((x) => x.cell) as Array<{ tile: TileData; cell: ChessboardCell }>;
 
     // 随机打乱砖块物品
-    const itemIdxList = bricksNodes.map((x) => x.node!.getComponent(GameBrick)!.itemIdx);
+    const itemIdxList = bricksNodes.map((x) => x.cell.itemIdx).filter((idx) => idx !== null) as Array<number>;
     for (let i = itemIdxList.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [itemIdxList[i], itemIdxList[j]] = [itemIdxList[j], itemIdxList[i]];
     }
 
     // 重新赋值
-    bricksNodes.forEach(({ node }, idx) => {
-      const brick = node!.getComponent(GameBrick)!;
+    bricksNodes.forEach(({ cell }, idx) => {
       const sf = theme.bricks[itemIdxList[idx]];
-      brick.updateUI(itemIdxList[idx], sf);
+      cell.updateItem(itemIdxList[idx], sf);
     });
   }
 
@@ -200,16 +295,10 @@ export class Chessboard {
     this._drawLink(paths);
 
     // 移除砖块
-    this._removeBrick(tile1.row, tile1.col);
-    this._removeBrick(tile2.row, tile2.col);
-    this.tiles[tile1.row][tile1.col] = TileType.Empty;
-    this.tiles[tile2.row][tile2.col] = TileType.Empty;
+    await this._removeBrickPair(tile1.row, tile1.col, tile2.row, tile2.col);
 
     // 取消之前的高亮（可选）
     this._clearAllHighlights();
-
-    await sleep(0.5);
-    this._clearLink();
   }
 
   /**
@@ -267,16 +356,12 @@ export class Chessboard {
       return;
     }
 
-    const node1 = this.cells.get(`${r1}x${c1}`)?.children[0];
-    const node2 = this.cells.get(`${row}x${col}`)?.children[0];
-    if (!node1 || !node2) return;
-
-    const brick1 = node1.getComponent(GameBrick);
-    const brick2 = node2.getComponent(GameBrick);
-    if (!brick1 || !brick2) return;
+    const cell1 = this.cells.get(`${r1}x${c1}`);
+    const cell2 = this.cells.get(`${row}x${col}`);
+    if (!cell1 || !cell2) return;
 
     // 如果不是相同的物品对象，则切换选择
-    if (brick1.itemIdx !== brick2.itemIdx) {
+    if (!cell1.isSame(cell2)) {
       this._toggleCell(r1, c1, false);
       this.firstSelection = { row, col };
       this._toggleCell(row, col, true);
@@ -295,38 +380,41 @@ export class Chessboard {
 
     console.log(paths);
     this._drawLink(paths);
-
-    this._removeBrick(r1, c1);
-    this._removeBrick(row, col);
-    this.tiles[r1][c1] = TileType.Empty;
-    this.tiles[row][col] = TileType.Empty;
+    await this._removeBrickPair(r1, c1, row, col);
     this.firstSelection = null;
-
-    await sleep(0.5);
-    this._clearLink();
-
-    // TODO: 消除后触发砖块移动
-    // this.moveTilesAfterMatch();
   }
 
-  private _removeBrick(row: number, col: number): void {
-    const cell = this.cells.get(`${row}x${col}`);
-    if (!cell || cell.children.length === 0) return;
-    cell.children[0].destroy();
+  /**
+   * 移除一对砖块
+   * @param r1
+   * @param c1
+   * @param r2
+   * @param c2
+   * @private
+   */
+  private async _removeBrickPair(r1: number, c1: number, r2: number, c2: number): Promise<void> {
+    const cell1 = this.cells.get(`${r1}x${c1}`);
+    const cell2 = this.cells.get(`${r2}x${c2}`);
+    if (!cell1 || !cell2) return;
+
+    await Promise.all([cell1.delTile(), cell2.delTile()]);
+
+    this.tiles[r1][c1] = TileType.Empty;
+    this.tiles[r2][c2] = TileType.Empty;
+    this._clearLink();
+
+    // 消除后触发砖块移动
+    await this._moveTilesAfterMatch();
   }
 
   private _toggleCell(row: number, col: number, checked: boolean): void {
     const cell = this.cells.get(`${row}x${col}`);
-    if (!cell || cell.children.length === 0) return;
-    const brick = cell.children[0].getComponent(GameBrick);
-    brick?.toggle(checked);
+    cell?.toggle(checked);
   }
 
   private _highlightCell(row: number, col: number, highlight: boolean): void {
     const cell = this.cells.get(`${row}x${col}`);
-    if (!cell || cell.children.length === 0) return;
-    const brick = cell.children[0].getComponent(GameBrick);
-    brick?.highlight(highlight);
+    cell?.highlight(highlight);
   }
 
   /**
@@ -337,9 +425,7 @@ export class Chessboard {
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
         const cell = this.cells.get(`${row}x${col}`);
-        if (!cell || cell.children.length === 0) continue;
-        const brick = cell.children[0].getComponent(GameBrick);
-        brick?.toggle(false);
+        cell?.highlight(false);
       }
     }
   }
@@ -396,16 +482,12 @@ export class Chessboard {
       for (let j = i + 1; j < bricks.length; j++) {
         const b1 = bricks[i];
         const b2 = bricks[j];
-        const node1 = this.cells.get(`${b1.row}x${b1.col}`)?.children[0];
-        const node2 = this.cells.get(`${b2.row}x${b2.col}`)?.children[0];
-        if (!node1 || !node2) continue;
-
-        const brick1 = node1.getComponent(GameBrick);
-        const brick2 = node2.getComponent(GameBrick);
-        if (!brick1 || !brick2) continue;
+        const cell1 = this.cells.get(`${b1.row}x${b1.col}`);
+        const cell2 = this.cells.get(`${b2.row}x${b2.col}`);
+        if (!cell1 || !cell2) continue;
 
         // 类型相同才可能匹配
-        if (brick1.itemIdx !== brick2.itemIdx) continue;
+        if (!cell1.isSame(cell2)) continue;
 
         // 检查连通性
         const paths = this._findLinkPath(b1.row, b1.col, b2.row, b2.col);
@@ -435,8 +517,8 @@ export class Chessboard {
       if (!cell) continue;
 
       const sf = theme.bricks[a.itemIdx];
-      const tile = this._createBrick(a.itemIdx, sf);
-      cell.addChild(tile);
+      const tile = this._createBrick(sf);
+      cell.addTile(tile, a.itemIdx);
 
       await sleep(0.02); // 避免阻塞
     }
@@ -480,6 +562,362 @@ export class Chessboard {
     }
 
     return assignment;
+  }
+
+  /**
+   * 消除后按照关卡的 dropMode 执行砖块移动
+   */
+  private async _moveTilesAfterMatch(): Promise<void> {
+    const moves = this._computeMoves(this.data.dropMode);
+    await this._applyMoves(moves);
+  }
+
+  /** 应用移动表：更新 tiles，并把节点从 fromCell 移到 toCell */
+  private async _applyMoves(moves: Move[]): Promise<void> {
+    if (moves.length === 0) return;
+
+    // 先更新 tiles（用一个影子网格避免覆盖）
+    const next = this.tiles.map((row) => [...row]);
+
+    for (const { from, to } of moves) {
+      const [fr, fc] = from;
+      const [tr, tc] = to;
+      // 目标必须是 Empty（同一段内算法已保证）
+      next[tr][tc] = TileType.Brick;
+      next[fr][fc] = TileType.Empty;
+    }
+    this.tiles = next;
+
+    await new Promise<void>((resolve, reject) => {
+      const total = moves.length;
+      let finished = 0;
+      // 再迁移节点
+      for (const { from, to } of moves) {
+        const [fr, fc] = from;
+        const [tr, tc] = to;
+
+        const fromCell = this.cells.get(`${fr}x${fc}`);
+        const toCell = this.cells.get(`${tr}x${tc}`);
+        if (!fromCell || !toCell) continue;
+
+        fromCell
+          .moveTile(toCell)
+          .then(() => {
+            if (++finished >= total) {
+              resolve();
+            }
+          })
+          .catch((e) => reject(e));
+      }
+    });
+  }
+
+  /** 计算移动表 */
+  private _computeMoves(mode: DropMode): Move[] {
+    switch (mode) {
+      case DropMode.Down:
+        return this._movesDown();
+      case DropMode.Up:
+        return this._movesUp();
+      case DropMode.Left:
+        return this._movesLeft();
+      case DropMode.Right:
+        return this._movesRight();
+      case DropMode.HorizontalInward:
+        return this._movesHorizontalInward();
+      case DropMode.HorizontalOutward:
+        return this._movesHorizontalOutward();
+      case DropMode.VerticalInward:
+        return this._movesVerticalInward();
+      case DropMode.VerticalOutward:
+        return this._movesVerticalOutward();
+      case DropMode.None:
+      default:
+        return [];
+    }
+  }
+
+  private _movesDown(): Move[] {
+    const moves: Move[] = [];
+    for (let c = 0; c < this.cols; c++) {
+      const rowsByAnyCol = this.tiles.map((rows) => rows[c]);
+      for (const [sr, er] of this._colSegments(rowsByAnyCol)) {
+        let target = er;
+        for (let r = er; r >= sr; r--) {
+          if (this.tiles[r][c] === TileType.Brick) {
+            if (r !== target) moves.push({ from: [r, c], to: [target, c] });
+            target--;
+          }
+        }
+      }
+    }
+    return moves;
+  }
+
+  private _movesUp(): Move[] {
+    const moves: Move[] = [];
+    for (let c = 0; c < this.cols; c++) {
+      const rowsByAnyCol = this.tiles.map((rows) => rows[c]);
+      for (const [sr, er] of this._colSegments(rowsByAnyCol)) {
+        let target = sr;
+        for (let r = sr; r <= er; r++) {
+          if (this.tiles[r][c] === TileType.Brick) {
+            if (r !== target) moves.push({ from: [r, c], to: [target, c] });
+            target++;
+          }
+        }
+      }
+    }
+    return moves;
+  }
+
+  private _movesLeft(): Move[] {
+    const moves: Move[] = [];
+    for (let r = 0; r < this.rows; r++) {
+      const colsByAnyRow = this.tiles[r];
+      for (const [sc, ec] of this._rowSegments(colsByAnyRow)) {
+        let target = sc;
+        for (let c = sc; c <= ec; c++) {
+          if (this.tiles[r][c] === TileType.Brick) {
+            if (c !== target) moves.push({ from: [r, c], to: [r, target] });
+            target++;
+          }
+        }
+      }
+    }
+    return moves;
+  }
+
+  private _movesRight(): Move[] {
+    const moves: Move[] = [];
+    for (let r = 0; r < this.rows; r++) {
+      const colsByAnyRow = this.tiles[r];
+      for (const [sc, ec] of this._rowSegments(colsByAnyRow)) {
+        let target = ec;
+        for (let c = ec; c >= sc; c--) {
+          if (this.tiles[r][c] === TileType.Brick) {
+            if (c !== target) moves.push({ from: [r, c], to: [r, target] });
+            target--;
+          }
+        }
+      }
+    }
+    return moves;
+  }
+
+  // ---------- 上下向内（上半向下靠近 mid-1， 下半向上靠近 mid） ----------
+  private _movesVerticalInward(): Move[] {
+    const moves: Move[] = [];
+    const mid = Math.floor(this.rows / 2); // 7 for rows=14
+
+    for (let c = 0; c < this.cols; c++) {
+      const rowsByAnyCol = this.tiles.map((rows) => rows[c]);
+      for (const [sr, er] of this._colSegments(rowsByAnyCol)) {
+        // top part (within upper half)
+        const topStart = sr;
+        const topEnd = Math.min(er, mid - 1);
+        if (topStart <= topEnd) {
+          // target starts at middle edge (mid-1) or the segment end if segment doesn't reach mid
+          let target = Math.min(mid - 1, topEnd);
+          // scan from near-middle towards top (down -> up)
+          for (let r = topEnd; r >= topStart; r--) {
+            if (this.tiles[r][c] === TileType.Brick) {
+              if (r !== target) moves.push({ from: [r, c], to: [target, c] });
+              target--;
+            }
+          }
+        }
+
+        // bottom part (within lower half)
+        const bottomStart = Math.max(sr, mid);
+        const bottomEnd = er;
+        if (bottomStart <= bottomEnd) {
+          // target starts at middle edge (mid) or the segment start if segment doesn't reach mid
+          let target = Math.max(mid, bottomStart);
+          // scan from near-middle towards bottom (up -> down)
+          for (let r = bottomStart; r <= bottomEnd; r++) {
+            if (this.tiles[r][c] === TileType.Brick) {
+              if (r !== target) moves.push({ from: [r, c], to: [target, c] });
+              target++;
+            }
+          }
+        }
+      }
+    }
+
+    return moves;
+  }
+
+  // ---------- 上下由内向外（中间先往外扩展） ----------
+  private _movesVerticalOutward(): Move[] {
+    const moves: Move[] = [];
+    const mid = Math.floor(this.rows / 2); // 7
+
+    for (let c = 0; c < this.cols; c++) {
+      const rowsByAnyCol = this.tiles.map((rows) => rows[c]);
+      for (const [sr, er] of this._colSegments(rowsByAnyCol)) {
+        // top part (within upper half)
+        const topStart = sr;
+        const topEnd = Math.min(er, mid - 1);
+        if (topStart <= topEnd) {
+          // target starts at middle edge (mid) or the segment start if segment doesn't reach mid
+          let target = Math.min(mid - 1, topStart);
+          // scan from near-middle towards bottom (up -> down)
+          for (let r = topStart; r <= topEnd; r++) {
+            if (this.tiles[r][c] === TileType.Brick) {
+              if (r !== target) moves.push({ from: [r, c], to: [target, c] });
+              target++;
+            }
+          }
+        }
+
+        // bottom part (within lower half)
+        const bottomStart = Math.max(sr, mid);
+        const bottomEnd = er;
+        if (bottomStart <= bottomEnd) {
+          // target starts at middle edge (mid-1) or the segment end if segment doesn't reach mid
+          let target = Math.max(mid, bottomEnd);
+          // scan from near-middle towards top (down -> up)
+          for (let r = bottomEnd; r >= bottomStart; r--) {
+            if (this.tiles[r][c] === TileType.Brick) {
+              if (r !== target) moves.push({ from: [r, c], to: [target, c] });
+              target--;
+            }
+          }
+        }
+      }
+    }
+
+    return moves;
+  }
+
+  // ---------- 左右向内（左半向右靠近 midCol-1，右半向左靠近 midCol） ----------
+  private _movesHorizontalInward(): Move[] {
+    const moves: Move[] = [];
+    const mid = Math.floor(this.cols / 2); // 4 for cols=8
+
+    for (let r = 0; r < this.rows; r++) {
+      const colsByAnyRow = this.tiles[r];
+      for (const [sc, ec] of this._rowSegments(colsByAnyRow)) {
+        // left part
+        const leftStart = sc;
+        const leftEnd = Math.min(ec, mid - 1);
+        if (leftStart <= leftEnd) {
+          let target = Math.min(mid - 1, leftEnd);
+          for (let c = leftEnd; c >= leftStart; c--) {
+            if (this.tiles[r][c] === TileType.Brick) {
+              if (c !== target) moves.push({ from: [r, c], to: [r, target] });
+              target--;
+            }
+          }
+        }
+
+        // right part
+        const rightStart = Math.max(sc, mid);
+        const rightEnd = ec;
+        if (rightStart <= rightEnd) {
+          let target = Math.max(mid, rightStart);
+          for (let c = rightStart; c <= rightEnd; c++) {
+            if (this.tiles[r][c] === TileType.Brick) {
+              if (c !== target) moves.push({ from: [r, c], to: [r, target] });
+              target++;
+            }
+          }
+        }
+      }
+    }
+
+    return moves;
+  }
+
+  // ---------- 左右由内向外（中间先向两侧展开） ----------
+  private _movesHorizontalOutward(): Move[] {
+    const moves: Move[] = [];
+    const mid = Math.floor(this.cols / 2); // 4
+
+    for (let r = 0; r < this.rows; r++) {
+      const colsByAnyRow = this.tiles[r];
+      for (const [sc, ec] of this._rowSegments(colsByAnyRow)) {
+        // left part
+        const leftStart = sc;
+        const leftEnd = Math.min(ec, mid - 1);
+        if (leftStart <= leftEnd) {
+          let target = Math.min(mid - 1, leftStart);
+          for (let c = leftStart; c <= leftEnd; c++) {
+            if (this.tiles[r][c] === TileType.Brick) {
+              if (c !== target) moves.push({ from: [r, c], to: [r, target] });
+              target++;
+            }
+          }
+        }
+
+        // right part
+        const rightStart = Math.max(sc, mid);
+        const rightEnd = ec;
+        if (rightStart <= rightEnd) {
+          let target = Math.max(mid, rightEnd);
+          for (let c = rightEnd; c >= rightStart; c--) {
+            if (this.tiles[r][c] === TileType.Brick) {
+              if (c !== target) moves.push({ from: [r, c], to: [r, target] });
+              target--;
+            }
+          }
+        }
+      }
+    }
+
+    return moves;
+  }
+
+  /**
+   * 是否是固定阻挡（非 Empty 且 非 Brick）
+   * @param t
+   * @private
+   */
+  private _isBlocker(t: TileType): boolean {
+    return t !== TileType.Empty && t !== TileType.Brick;
+  }
+
+  /**
+   * 一行切段：被“阻挡物”分隔，返回 [startCol, endCol] 闭区间
+   * @param colsByAnyRow
+   * @private
+   */
+  private _rowSegments(colsByAnyRow: Array<TileType>): Array<[number, number]> {
+    const segments: Array<[number, number]> = [];
+    const len = colsByAnyRow.length;
+    let c = 0;
+    while (c < len) {
+      // 跳过阻挡
+      while (c < len && this._isBlocker(colsByAnyRow[c])) c++;
+      if (c >= len) break;
+      const start = c;
+      // 扩展到连续的非阻挡区
+      while (c < len && !this._isBlocker(colsByAnyRow[c])) c++;
+      const end = c - 1;
+      segments.push([start, end]);
+    }
+    return segments;
+  }
+
+  /**
+   * 一列切段：被“阻挡物”分隔，返回 [startRow, endRow] 闭区间
+   * @param rowsByAnyCol
+   * @private
+   */
+  private _colSegments(rowsByAnyCol: Array<TileType>): Array<[number, number]> {
+    const segments: Array<[number, number]> = [];
+    const len = rowsByAnyCol.length;
+    let r = 0;
+    while (r < len) {
+      while (r < len && this._isBlocker(rowsByAnyCol[r])) r++;
+      if (r >= len) break;
+      const start = r;
+      while (r < len && !this._isBlocker(rowsByAnyCol[r])) r++;
+      const end = r - 1;
+      segments.push([start, end]);
+    }
+    return segments;
   }
 
   /**
@@ -617,13 +1055,13 @@ export class Chessboard {
    * 创建一个砖块
    * @private
    */
-  private _createBrick(itemIdx: number, sf: SpriteFrame): Node {
+  private _createBrick(sf: SpriteFrame): Node {
     const node = instantiate(this.brickPrefab);
     const ui = node.getComponent(UITransform) || node.addComponent(UITransform);
     const item = node.getComponent(GameBrick);
     node.setPosition(Vec3.ZERO);
     ui.setContentSize(this.boardLayout.cellSize);
-    item?.updateUI(itemIdx, sf);
+    item?.updateUI(sf);
     return node;
   }
 
@@ -639,8 +1077,8 @@ export class Chessboard {
         continue;
       }
 
-      const tile = this._createEmpty(`__Ice_${block.row}_${block.col}__`);
-      cell.addChild(tile);
+      const tile = this._createEmpty(`__Block_${block.row}_${block.col}__`);
+      cell.addTile(tile, -1);
     }
   }
 
@@ -662,6 +1100,7 @@ export class Chessboard {
             bricks.push({ row, col, type });
             break;
           case TileType.Ice:
+          case TileType.Wall:
             blocks.push({ row, col, type });
             break;
         }
@@ -712,7 +1151,7 @@ export class Chessboard {
       for (let col = 0; col < this.cols; col++) {
         const cell = this._createEmpty(`__Cell_${row}_${col}__`);
         this.boardNode.addChild(cell);
-        this.cells.set(`${row}x${col}`, cell);
+        this.cells.set(`${row}x${col}`, new ChessboardCell(row, col, cell));
       }
     }
   }
