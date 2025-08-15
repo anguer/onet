@@ -31,10 +31,13 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
   @property({ type: Button, group: { id: 'items', name: '道具' } }) private itemBomb: Button;
 
   private _chessboard: Chessboard;
+  private _isPaused: boolean = false;
 
   private get level(): NonogramLevel {
     return this.options;
   }
+
+  // ========== 生命周期 ==========
 
   protected onInit(level: NonogramLevel): void {
     const uiOpacity = this.node.getComponent(UIOpacity) || this.node.addComponent(UIOpacity);
@@ -101,8 +104,11 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
 
   @Throttle()
   private async _onSetting() {
-    AudioManager.instance.playEffect('common/audio/click1');
+    if (this._isPaused) return;
+
     this.pause();
+
+    AudioManager.instance.playEffect('common/audio/click1');
     const result = await PopupManager.instance.show('GameSettingPopup', {});
     switch (result) {
       case GameSettingResult.Home:
@@ -114,11 +120,14 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
       case GameSettingResult.Close:
         break;
     }
+
     this.resume();
   }
 
   @Throttle()
   private async _onUseHint() {
+    if (this._isPaused) return;
+
     this.pause();
 
     const result = await AdManager.instance.showRewardedAd();
@@ -131,6 +140,8 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
 
   @Throttle()
   private async _onUseRefresh() {
+    if (this._isPaused) return;
+
     this.pause();
 
     AudioManager.instance.playEffect('common/audio/click1');
@@ -141,6 +152,8 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
 
   @Throttle()
   private async _onUseBomb() {
+    if (this._isPaused) return;
+
     this.pause();
 
     AudioManager.instance.playEffect('common/audio/click1');
@@ -152,6 +165,8 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
 
   @Throttle(50)
   private async _onTouchEnd(event: EventTouch) {
+    if (this._isPaused) return;
+
     this.pause();
 
     // 选择或消除
@@ -164,6 +179,7 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
   // ========== 游戏逻辑 ==========
 
   private pause() {
+    this._isPaused = true;
     this.settingBtn.interactable = false;
     this.itemHint.interactable = false;
     this.itemRefresh.interactable = false;
@@ -171,6 +187,7 @@ export class GameScreen extends BasePopup<NonogramLevel, GameResult> {
   }
 
   private resume() {
+    this._isPaused = false;
     this.settingBtn.interactable = true;
     this.itemHint.interactable = true;
     this.itemRefresh.interactable = true;

@@ -5,10 +5,16 @@ import { ThemeManager } from 'db://assets/scripts/managers/ThemeManager';
 
 // 瓦片类型
 export enum TileType {
+  // 棋盘上的空位
   Empty = 0,
+  // 砖块 - 通过选择相同砖块且连接路径（拐点<=2）消除
   Brick = 1,
+  // 冰块 - 可通过消除四周相邻砖块破碎、不会移动、会阻挡路径连接
   Ice = 2,
-  Wall = 3,
+  // 硬质障碍物 - 不可被破坏、不会移动、会阻挡路径连接
+  Stone = 3,
+  // 木质障碍物 - 不可被破坏、会跟随移动、会阻挡路径连接
+  Wood = 4,
 }
 
 // 移动模式
@@ -199,7 +205,7 @@ export class Chessboard {
       DropMode.VerticalInward,
       DropMode.VerticalOutward,
     ];
-    // TODO: 暂时随机移动模式，方便测试
+    // TODO: 随机一个移动模式，方便测试
     this.data.dropMode = modes[math.randomRangeInt(0, modes.length)];
 
     const { bricks, blocks } = this._parseLevelTiles();
@@ -275,8 +281,8 @@ export class Chessboard {
 
     const { tile1, tile2 } = pair;
 
-    // 先取消之前的高亮（可选，根据需求）
-    this._clearAllHighlights();
+    // 先取消之前的选择
+    this._clearAllSelections();
 
     // 高亮砖块
     this._highlightCell(tile1.row, tile1.col, true);
@@ -292,13 +298,11 @@ export class Chessboard {
 
     const { tile1, tile2, paths } = pair;
 
-    this._drawLink(paths);
+    // 取消之前的选择
+    this._clearAllSelections();
 
     // 移除砖块
-    await this._removeBrickPair(tile1.row, tile1.col, tile2.row, tile2.col);
-
-    // 取消之前的高亮（可选）
-    this._clearAllHighlights();
+    await this._removeBrickPair(paths, tile1.row, tile1.col, tile2.row, tile2.col);
   }
 
   /**
@@ -370,7 +374,7 @@ export class Chessboard {
 
     const paths = this._findLinkPath(r1, c1, row, col);
 
-    // 如果不能消除，则执行一个错误动画
+    // FIXME: 如果不能消除，则执行一个错误动画
     if (!paths) {
       this._toggleCell(r1, c1, false);
       this.firstSelection = { row, col };
@@ -378,29 +382,33 @@ export class Chessboard {
       return;
     }
 
-    console.log(paths);
-    this._drawLink(paths);
-    await this._removeBrickPair(r1, c1, row, col);
+    this._toggleCell(row, col, true);
+    await this._removeBrickPair(paths, r1, c1, row, col);
     this.firstSelection = null;
   }
 
   /**
    * 移除一对砖块
+   * @param paths
    * @param r1
    * @param c1
    * @param r2
    * @param c2
    * @private
    */
-  private async _removeBrickPair(r1: number, c1: number, r2: number, c2: number): Promise<void> {
+  private async _removeBrickPair(paths: PathCell[], r1: number, c1: number, r2: number, c2: number): Promise<void> {
     const cell1 = this.cells.get(`${r1}x${c1}`);
     const cell2 = this.cells.get(`${r2}x${c2}`);
     if (!cell1 || !cell2) return;
+
+    console.log(paths);
+    this._drawLink(paths);
 
     await Promise.all([cell1.delTile(), cell2.delTile()]);
 
     this.tiles[r1][c1] = TileType.Empty;
     this.tiles[r2][c2] = TileType.Empty;
+
     this._clearLink();
 
     // 消除后触发砖块移动
@@ -418,14 +426,14 @@ export class Chessboard {
   }
 
   /**
-   * 清除棋盘上所有砖块高亮
+   * 清除棋盘上所有选择
    * @private
    */
-  private _clearAllHighlights(): void {
+  private _clearAllSelections(): void {
+    this.firstSelection = null;
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
-        const cell = this.cells.get(`${row}x${col}`);
-        cell?.highlight(false);
+        this._toggleCell(row, col, false);
       }
     }
   }
@@ -1100,7 +1108,8 @@ export class Chessboard {
             bricks.push({ row, col, type });
             break;
           case TileType.Ice:
-          case TileType.Wall:
+          case TileType.Stone:
+          case TileType.Wood:
             blocks.push({ row, col, type });
             break;
         }
