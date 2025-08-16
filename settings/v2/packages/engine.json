@@ -152,7 +152,7 @@
             "_value": false
           },
           "spine": {
-            "_value": false,
+            "_value": true,
             "_option": "spine-3.8"
           },
           "spine-3.8": {
@@ -190,7 +190,9 @@
             "_value": false
           }
         },
-        "flags": {},
+        "flags": {
+          "LOAD_SPINE_MANUALLY": false
+        },
         "includeModules": [
           "2d",
           "affine-transform",
@@ -206,6 +208,7 @@
           "particle-2d",
           "profiler",
           "rich-text",
+          "spine-3.8",
           "tween",
           "ui",
           "websocket"

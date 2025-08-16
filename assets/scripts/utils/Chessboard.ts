@@ -101,21 +101,42 @@ class ChessboardCell {
     });
   }
 
+  public async shakeTile(): Promise<void> {
+    if (!this._tile) return;
+
+    const tile = this._tile;
+    const originalRotation = tile.angle;
+    const angle = 10; // 抖动的角度幅度
+    const duration = 0.05; // 单次抖动时长
+
+    return new Promise<void>((resolve) => {
+      tween(tile)
+        .to(duration, { angle: originalRotation + angle })
+        .to(duration, { angle: originalRotation - angle })
+        .to(duration, { angle: originalRotation + angle / 2 })
+        .to(duration, { angle: originalRotation })
+        .call(() => {
+          resolve();
+        })
+        .start();
+    });
+  }
+
   public async delTile(): Promise<void> {
     if (this._tile) {
-      const tile = this._tile;
-      await new Promise<void>((resolve) => {
-        tween(tile)
-          .to(0.2, { scale: Vec3.ZERO }, { easing: 'backIn' })
-          .call(() => resolve())
-          .destroySelf()
-          .start();
-      });
+      await this.brick?.destroySelf();
+      // const tile = this._tile;
+      // await new Promise<void>((resolve) => {
+      //   tween(tile)
+      //     .to(0.2, { scale: Vec3.ZERO }, { easing: 'backIn' })
+      //     .call(() => resolve())
+      //     .destroySelf()
+      //     .start();
+      // });
     }
 
     this._tile = null;
     this._itemIdx = null;
-    // this.node.removeAllChildren();
   }
 
   public isSame(other: ChessboardCell): boolean {
@@ -159,7 +180,7 @@ export class Chessboard {
 
   // 是否已全部清除
   public get isCleared(): boolean {
-    return this.tiles.every((row) => row.every((tile) => tile === TileType.Empty));
+    return this.tiles.every((row) => row.every((tile) => tile !== TileType.Brick));
   }
 
   // 是否有至少一对可消除
@@ -256,10 +277,10 @@ export class Chessboard {
         const cell = this.cells.get(`${tile.row}x${tile.col}`);
         return { tile, cell };
       })
-      .filter((x) => x.cell) as Array<{ tile: TileData; cell: ChessboardCell }>;
+      .filter((x) => x.cell && x.cell.itemIdx !== null) as Array<{ tile: TileData; cell: ChessboardCell }>;
 
     // 随机打乱砖块物品
-    const itemIdxList = bricksNodes.map((x) => x.cell.itemIdx).filter((idx) => idx !== null) as Array<number>;
+    const itemIdxList = bricksNodes.map((x) => x.cell.itemIdx) as Array<number>;
     for (let i = itemIdxList.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [itemIdxList[i], itemIdxList[j]] = [itemIdxList[j], itemIdxList[i]];
@@ -374,11 +395,11 @@ export class Chessboard {
 
     const paths = this._findLinkPath(r1, c1, row, col);
 
-    // FIXME: 如果不能消除，则执行一个错误动画
     if (!paths) {
+      this.firstSelection = null;
       this._toggleCell(r1, c1, false);
-      this.firstSelection = { row, col };
-      this._toggleCell(row, col, true);
+      // 配对不能消除时的抖动动画
+      await Promise.all([cell1.shakeTile(), cell2.shakeTile()]);
       return;
     }
 
@@ -404,11 +425,10 @@ export class Chessboard {
     console.log(paths);
     this._drawLink(paths);
 
-    await Promise.all([cell1.delTile(), cell2.delTile()]);
-
     this.tiles[r1][c1] = TileType.Empty;
     this.tiles[r2][c2] = TileType.Empty;
 
+    await Promise.all([cell1.delTile(), cell2.delTile()]);
     this._clearLink();
 
     // 消除后触发砖块移动
