@@ -2,6 +2,13 @@
 
 # Changelog
 
+## [1.1.11](https://github.com/anguer/onet/compare/v1.1.10...v1.1.11) (2025-08-16)
+
+
+### Bug Fixes
+
+* 添加消除特效 ([42745df](https://github.com/anguer/onet/commit/42745df916bf3c7aee2aaa51a103a001aebfc661))
+
 ## [1.1.10](https://github.com/anguer/onet/compare/v1.1.9...v1.1.10) (2025-08-15)
 
 
